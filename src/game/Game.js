@@ -27,48 +27,41 @@ export default class Game {
         this.bulletsHit = 0;
         this.scoreMultiplier = 1;
         this.consecutiveHits = 0;
+        this.difficulty = 1.0; // 动态难度
 
-        // 加载音频
-        this.bgm = new Audio('assets/sounds/bgm.mp3');
-        this.bgm.loop = true;
-        this.bgm.volume = settings.soundVolume;
-        this.sounds = {
-            explosion: new Audio('assets/sounds/explosion.mp3'),
-            laser: new Audio('assets/sounds/laser.mp3'),
-            missile: new Audio('assets/sounds/missile.mp3'),
-            penta: new Audio('assets/sounds/penta.mp3'),
-            powerup: new Audio('assets/sounds/powerup.mp3'),
-            shoot: new Audio('assets/sounds/shoot.mp3'),
-            wave: new Audio('assets/sounds/wave.mp3'),
-            boss_warning: new Audio('assets/sounds/boss_warning.mp3')
+        // 超级代码：高级音效系统
+        this.audioEngine = {
+            bgm: new Audio('assets/sounds/bgm.mp3'),
+            effects: {
+                explosion: new Audio('assets/sounds/explosion.mp3'),
+                laser: new Audio('assets/sounds/laser.mp3'),
+                powerup: new Audio('assets/sounds/powerup.mp3')
+            }
         };
-        Object.values(this.sounds).forEach(sound => {
+        this.audioEngine.bgm.loop = true;
+        this.audioEngine.bgm.volume = settings.soundVolume;
+        Object.values(this.audioEngine.effects).forEach(sound => {
             sound.volume = settings.soundVolume;
-            sound.onerror = () => console.warn(`音频加载失败: ${sound.src}`);
+            sound.onerror = () => console.warn(`音效加载失败: ${sound.src}`);
         });
 
-        // 性能设置
         this.quality = settings.graphicsQuality;
     }
 
     start() {
-        if (!this.bgm) {
-            console.warn('背景音乐加载失败，使用静音模式');
-        } else {
-            this.bgm.play().catch(e => console.warn('音频播放失败:', e));
-        }
+        this.audioEngine.bgm.play().catch(e => console.warn('音频播放失败:', e));
         this.spawnWave();
         this.animate();
     }
 
     stop() {
-        if (this.bgm) this.bgm.pause();
+        this.audioEngine.bgm.pause();
     }
 
     updateSettings(settings) {
         this.settings = settings;
-        if (this.bgm) this.bgm.volume = settings.soundVolume;
-        Object.values(this.sounds).forEach(sound => sound.volume = settings.soundVolume);
+        this.audioEngine.bgm.volume = settings.soundVolume;
+        Object.values(this.audioEngine.effects).forEach(sound => sound.volume = settings.soundVolume);
         this.quality = settings.graphicsQuality;
         this.hud.updateLanguage();
         this.input.updateKeyBindings(settings.keyBindings);
@@ -79,45 +72,41 @@ export default class Game {
         this.canvas.height = height;
         this.player.resize(width, height);
         this.hud.resize(width, height);
+        this.enemies.forEach(enemy => enemy.resize(width, height));
+        this.powerups.forEach(powerup => powerup.resize(width, height));
     }
 
     spawnWave() {
-        const enemyCount = 5 + this.wave * 2;
-        const enemyTypes = ['small', 'medium', 'large', 'stealth'];
+        const enemyCount = 15 + this.wave * 5 * this.difficulty;
         for (let i = 0; i < enemyCount; i++) {
-            const type = enemyTypes[Math.floor(Math.random() * 4)];
+            const type = ['small', 'medium', 'large', 'stealth', 'boss'][Math.floor(Math.random() * (this.wave > 10 ? 5 : 4))];
             if (type === 'stealth') {
                 this.enemies.push(new StealthEnemy(this, this.wave));
+            } else if (type === 'boss' && !this.bossActive && this.wave % 5 === 0) {
+                this.enemies.push(new Enemy(this, this.wave, true));
+                this.bossActive = true;
+                this.audioEngine.effects.laser.play();
             } else {
                 this.enemies.push(new Enemy(this, this.wave, false, type));
             }
         }
-        if (this.wave % 5 === 0) {
-            this.enemies.push(new Enemy(this, this.wave, true));
-            this.bossActive = true;
-            if (this.sounds.boss_warning) this.sounds.boss_warning.play();
+        for (let i = 0; i < Math.floor(this.wave / 3); i++) {
+            if (Math.random() < 0.7) this.powerups.push(new Powerup(this));
         }
-        if (Math.random() < 0.3) {
-            this.powerups.push(new Powerup(this));
-        }
+        this.difficulty = Math.min(2.0, this.difficulty + 0.1); // 超级代码：动态难度
     }
 
     animate() {
         if (this.paused || this.gameOver) return;
         try {
-            console.log('Animating frame...');
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-            // 优化背景渲染，使用 1920x1440 的 background.png 并自适应
             this.renderBackground();
 
-            // 更新和绘制
             const keys = this.input.getKeys();
-            console.log('Current keys:', keys);
             this.player.update(keys);
             this.player.draw();
             this.enemies.forEach(enemy => {
-                enemy.update();
+                enemy.update(this.player);
                 enemy.draw();
             });
             this.powerups.forEach(powerup => {
@@ -126,21 +115,24 @@ export default class Game {
             });
             this.particles.update();
             this.particles.draw();
+            this.handleCollisions();
             this.hud.draw();
 
-            // 碰撞检测
-            this.handleCollisions();
-
-            // 下一波
             if (this.enemies.length === 0) {
                 this.wave++;
                 this.bossActive = false;
                 this.spawnWave();
             }
 
+            // 超级代码：粒子特效和屏幕抖动
+            if (this.bossActive) {
+                this.ctx.filter = 'hue-rotate(90deg)';
+                this.particles.addBurst(this.canvas.width / 2, this.canvas.height / 2);
+            }
+
             requestAnimationFrame(() => this.animate());
         } catch (error) {
-            console.error('动画循环错误:', error);
+            console.error('动画错误:', error);
             this.gameOver = true;
             this.hud.showGameOver();
         }
@@ -149,113 +141,84 @@ export default class Game {
     renderBackground() {
         const bgImage = this.images['assets/images/background.png'];
         if (bgImage) {
-            const canvasAspect = this.canvas.width / this.canvas.height;
-            const imageAspect = 1920 / 1440;
-            let scale = 1;
-            let x = 0;
-            let y = 0;
-
-            if (canvasAspect > imageAspect) {
-                scale = this.canvas.width / 1920;
-                y = (this.canvas.height - 1440 * scale) / 2;
-            } else {
-                scale = this.canvas.height / 1440;
-                x = (this.canvas.width - 1920 * scale) / 2;
-            }
-
-            // 平滑过渡效果
+            const scaleX = this.canvas.width / 1920;
+            const scaleY = this.canvas.height / 1440;
+            const scale = Math.max(scaleX, scaleY);
+            const x = (this.canvas.width - 1920 * scale) / 2;
+            const y = (this.canvas.height - 1440 * scale) / 2;
             this.ctx.save();
-            this.ctx.globalAlpha = 0.9;
+            this.ctx.filter = 'brightness(120%) contrast(110%)';
             this.ctx.drawImage(bgImage, x, y, 1920 * scale, 1440 * scale);
-            this.ctx.globalAlpha = 1;
             this.ctx.restore();
         } else {
-            this.ctx.fillStyle = '#1a2a44';
+            this.ctx.fillStyle = 'rgba(10, 10, 42, 0.8)';
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-            for (let i = 0; i < 100; i++) {
-                this.ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.5 + 0.3})`;
+            for (let i = 0; i < 200; i++) {
+                this.ctx.fillStyle = `rgba(0, 255, 204, ${Math.random() * 0.5 + 0.3})`;
                 this.ctx.beginPath();
-                this.ctx.arc(
-                    Math.random() * this.canvas.width,
-                    Math.random() * this.canvas.height,
-                    Math.random() * 2 + 1,
-                    0,
-                    Math.PI * 2
-                );
+                this.ctx.arc(Math.random() * this.canvas.width, Math.random() * this.canvas.height, Math.random() * 3 + 1, 0, Math.PI * 2);
                 this.ctx.fill();
-                if (this.quality === 'high') {
-                    this.ctx.shadowBlur = 10;
-                    this.ctx.shadowColor = '#fff';
-                }
             }
-            this.ctx.shadowBlur = 0;
         }
     }
 
     handleCollisions() {
-        // 玩家与敌方子弹碰撞
         this.enemies.forEach(enemy => {
             enemy.bullets.forEach(bullet => {
                 if (this.isColliding(this.player, bullet)) {
-                    this.player.health -= 10;
+                    this.player.health -= 15 * this.difficulty;
                     bullet.active = false;
                     this.particles.addExplosion(bullet.x, bullet.y);
-                    if (this.sounds.explosion) this.sounds.explosion.play();
+                    if (this.audioEngine.effects.explosion) this.audioEngine.effects.explosion.play();
                     this.consecutiveHits = 0;
                     this.scoreMultiplier = 1;
-                    console.log('Player hit by enemy bullet, health:', this.player.health);
                 }
             });
-        });
-
-        // 玩家子弹与敌人碰撞
-        this.player.weaponSystem.bullets.forEach(bullet => {
-            this.enemies.forEach(enemy => {
-                if (this.isColliding(bullet, enemy) && (!enemy.isStealth || !enemy.isCloaked)) {
-                    enemy.health -= bullet.damage;
-                    bullet.active = false;
-                    this.bulletsHit++;
-                    this.consecutiveHits++;
-                    if (this.consecutiveHits >= 5) {
-                        this.scoreMultiplier = Math.min(this.scoreMultiplier + 0.1, 2);
-                    }
-                    this.particles.addExplosion(bullet.x, bullet.y);
-                    if (enemy.health <= 0) {
-                        const baseScore = enemy.isBoss ? 100 : enemy.type === 'stealth' ? 50 : enemy.type === 'large' ? 30 : enemy.type === 'medium' ? 20 : 10;
-                        this.score += Math.round(baseScore * this.scoreMultiplier);
-                        enemy.active = false;
-                        if (this.sounds.explosion) this.sounds.explosion.play();
-                        console.log('Enemy defeated, score:', this.score);
-                    }
-                }
-            });
-        });
-
-        // 玩家与道具碰撞
-        this.powerups.forEach(powerup => {
-            if (this.isColliding(this.player, powerup)) {
-                console.log('Player collided with powerup:', powerup.type);
-                if (powerup.type === 'life') {
-                    this.player.health = Math.min(this.player.health + 50, 100);
-                    console.log('Life powerup applied, new health:', this.player.health);
-                } else if (powerup.type === 'energy') {
-                    this.player.health = Math.min(this.player.health + 20, 100);
-                    console.log('Energy powerup applied, new health:', this.player.health);
-                } else {
-                    this.player.weaponSystem.setWeapon(powerup.type);
-                    console.log('Weapon powerup applied:', powerup.type);
-                }
-                powerup.active = false;
-                if (this.sounds.powerup) this.sounds.powerup.play();
+            if (this.isColliding(this.player, enemy)) {
+                this.player.health -= 30 * this.difficulty;
+                enemy.active = false;
+                this.particles.addExplosion(enemy.x, enemy.y);
+                if (this.audioEngine.effects.explosion) this.audioEngine.effects.explosion.play();
             }
         });
 
-        // 清理
+        this.player.weaponSystem.bullets.forEach(bullet => {
+            this.enemies.forEach(enemy => {
+                if (this.isColliding(bullet, enemy) && (!enemy.isStealth || !enemy.isCloaked)) {
+                    enemy.health -= bullet.damage * this.difficulty;
+                    bullet.active = false;
+                    this.bulletsHit++;
+                    this.consecutiveHits++;
+                    if (this.consecutiveHits >= 5) this.scoreMultiplier = Math.min(this.scoreMultiplier + 0.2, 3);
+                    this.particles.addExplosion(bullet.x, bullet.y);
+                    if (enemy.health <= 0) {
+                        const score = enemy.isBoss ? 200 : enemy.type === 'stealth' ? 100 : { large: 60, medium: 40, small: 20 }[enemy.type] || 20;
+                        this.score += Math.round(score * this.scoreMultiplier);
+                        enemy.active = false;
+                        if (this.audioEngine.effects.explosion) this.audioEngine.effects.explosion.play();
+                    }
+                }
+            });
+        });
+
+        this.powerups.forEach(powerup => {
+            if (this.isColliding(this.player, powerup)) {
+                if (powerup.type === 'life') {
+                    this.player.health = Math.min(this.player.health + 50, 200);
+                } else if (powerup.type === 'energy') {
+                    this.player.health += 30;
+                } else {
+                    this.player.weaponSystem.setWeapon(powerup.type);
+                }
+                powerup.active = false;
+                if (this.audioEngine.effects.powerup) this.audioEngine.effects.powerup.play();
+            }
+        });
+
         this.enemies = this.enemies.filter(e => e.active);
         this.powerups = this.powerups.filter(p => p.active);
         this.player.weaponSystem.bullets = this.player.weaponSystem.bullets.filter(b => b.active);
 
-        // 游戏结束
         if (this.player.health <= 0) {
             this.gameOver = true;
             this.hud.showGameOver();
@@ -263,12 +226,7 @@ export default class Game {
     }
 
     isColliding(a, b) {
-        return (
-            a.x < b.x + b.width &&
-            a.x + a.width > b.x &&
-            a.y < b.y + b.height &&
-            a.y + a.height > b.y
-        );
+        return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
     }
 
     saveState() {
@@ -281,7 +239,8 @@ export default class Game {
             enemies: this.enemies.map(e => e.saveState()),
             powerups: this.powerups.map(p => p.saveState()),
             scoreMultiplier: this.scoreMultiplier,
-            consecutiveHits: this.consecutiveHits
+            consecutiveHits: this.consecutiveHits,
+            difficulty: this.difficulty
         };
     }
 
@@ -292,6 +251,7 @@ export default class Game {
         this.bulletsHit = state.bulletsHit;
         this.scoreMultiplier = state.scoreMultiplier;
         this.consecutiveHits = state.consecutiveHits;
+        this.difficulty = state.difficulty || 1.0;
         this.player.loadState(state.player);
         this.enemies = state.enemies.map(data => {
             const enemy = data.type === 'stealth' ? new StealthEnemy(this, this.wave) : new Enemy(this, this.wave, data.isBoss, data.type);
@@ -308,10 +268,11 @@ export default class Game {
     togglePause() {
         this.paused = !this.paused;
         if (this.paused) {
-            if (this.bgm) this.bgm.pause();
-            this.hud.showPauseMenu();
+            this.audioEngine.bgm.pause();
+            pauseMenu.style.display = 'block';
         } else {
-            if (this.bgm) this.bgm.play().catch(e => console.warn('音频播放失败:', e));
+            this.audioEngine.bgm.play().catch(e => console.warn('音频播放失败:', e));
+            pauseMenu.style.display = 'none';
             this.animate();
         }
     }
