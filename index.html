@@ -1,114 +1,59 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>我爱打飞机</title>
-    <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico"> <!-- 假设 ico 文件名为 favicon.ico -->
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background: #000;
-        }
-        #game-canvas {
-            display: none;
-            width: 100%;
-            height: 100vh;
-        }
-        .menu-container, .settings-menu {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            color: #fff;
-            font-family: Arial, sans-serif;
-        }
-        .menu-buttons button, .settings-menu button {
-            display: block;
-            margin: 10px auto;
-            padding: 10px 20px;
-            font-size: 18px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        .settings-menu select, .settings-menu input {
-            margin: 10px;
-            padding: 5px;
-        }
-        .install-button {
-            display: none;
-            margin-top: 20px;
-        }
-        .mobile-controls {
-            display: none;
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            flex-direction: row;
-            gap: 10px;
-        }
-        .mobile-controls button {
-            width: 50px;
-            height: 50px;
-            background-color: #4CAF50;
-            border: none;
-            color: white;
-            font-size: 16px;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="/favicon.ico">
 </head>
 <body>
+    <video autoplay muted loop id="menu-bg" class="background-video">
+        <source src="assets/videos/menu_starfield.webm" type="video/webm">
+        <source src="assets/videos/menu_starfield.mp4" type="video/mp4">
+    </video>
     <div class="menu-container">
-        <h1 data-i18n="title">我爱打飞机</h1>
+        <h1 class="game-title" data-i18n="title">我爱打飞机</h1>
         <div class="menu-buttons">
             <button id="start-game" data-i18n="start">开始游戏</button>
-            <button id="continue-game" data-i18n="continue" disabled>继续游戏</button>
+            <button id="continue-game" disabled data-i18n="continue">继续游戏</button>
             <button id="settings" data-i18n="settings">设置</button>
-            <button id="return-game" data-i18n="return" style="display: none">返回游戏</button>
+            <button id="return-game" style="display: none;" data-i18n="return">返回游戏</button>
             <button id="exit" data-i18n="exit">退出</button>
         </div>
-        <div class="settings-menu" style="display: none">
-            <label data-i18n="sound_volume">音量</label>
-            <input type="range" id="sound-volume" min="0" max="1" step="0.1" value="0.5">
-            <label data-i18n="graphics_quality">画质</label>
-            <select id="graphics-quality">
-                <option value="low" data-i18n="low">低</option>
-                <option value="high" data-i18n="high">高</option>
-            </select>
-            <label data-i18n="language">语言</label>
-            <select id="language">
-                <option value="zh" data-i18n="chinese">中文</option>
-                <option value="en" data-i18n="english">English</option>
-            </select>
-            <label data-i18n="keybindings">按键绑定</label>
-            <div>
-                <label data-i18n="move_up">向上移动</label>
-                <input type="text" id="key-up" readonly>
-                <label data-i18n="move_down">向下移动</label>
-                <input type="text" id="key-down" readonly>
-                <label data-i18n="move_left">向左移动</label>
-                <input type="text" id="key-left" readonly>
-                <label data-i18n="move_right">向右移动</label>
-                <input type="text" id="key-right" readonly>
-                <label data-i18n="shoot">射击</label>
-                <input type="text" id="key-shoot" readonly>
-            </div>
+        <div class="settings-menu" style="display: none; z-index: 100;">
+            <h2 data-i18n="settings">设置</h2>
+            <label data-i18n="sound_volume">音量: <input type="range" id="sound-volume" min="0" max="1" step="0.1" value="0.5"></label>
+            <label data-i18n="graphics_quality">画质: 
+                <select id="graphics-quality">
+                    <option value="low" data-i18n="low">低</option>
+                    <option value="high" selected data-i18n="high">高</option>
+                </select>
+            </label>
+            <label data-i18n="language">语言: 
+                <select id="language">
+                    <option value="en" data-i18n="english">英语</option>
+                    <option value="zh" data-i18n="chinese">中文</option>
+                </select>
+            </label>
+            <h3 data-i18n="keybindings">按键绑定</h3>
+            <label data-i18n="move_up">向上移动: <input type="text" id="key-up" readonly value="W/Up"></label>
+            <label data-i18n="move_down">向下移动: <input type="text" id="key-down" readonly value="S/Down"></label>
+            <label data-i18n="move_left">向左移动: <input type="text" id="key-left" readonly value="A/Left"></label>
+            <label data-i18n="move_right">向右移动: <input type="text" id="key-right" readonly value="D/Right"></label>
+            <label data-i18n="shoot">射击: <input type="text" id="key-shoot" readonly value="Space"></label>
             <button id="save-settings" data-i18n="save">保存</button>
             <button id="close-settings" data-i18n="close">关闭</button>
         </div>
     </div>
-    <canvas id="game-canvas"></canvas>
-    <div class="mobile-controls">
-        <button id="mobile-left">←</button>
-        <button id="mobile-up">↑</button>
-        <button id="mobile-down">↓</button>
-        <button id="mobile-right">→</button>
-        <button id="mobile-shoot">Shoot</button>
+    <canvas id="game-canvas" style="display: none;"></canvas>
+    <div class="mobile-controls" style="display: none;">
+        <button id="mobile-left" class="mobile-button">←</button>
+        <button id="mobile-right" class="mobile-button">→</button>
+        <button id="mobile-up" class="mobile-button">↑</button>
+        <button id="mobile-down" class="mobile-button">↓</button>
+        <button id="mobile-shoot" class="mobile-button">🔫</button>
     </div>
     <script type="module" src="main.js"></script>
 </body>
