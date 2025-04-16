@@ -105,13 +105,16 @@ export default class Game {
     animate() {
         if (this.paused || this.gameOver) return;
         try {
+            console.log('Animating frame...');
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
             // 优化背景渲染，使用 1920x1440 的 background.png 并自适应
             this.renderBackground();
 
             // 更新和绘制
-            this.player.update();
+            const keys = this.input.getKeys();
+            console.log('Current keys:', keys);
+            this.player.update(keys);
             this.player.draw();
             this.enemies.forEach(enemy => {
                 enemy.update();
@@ -200,6 +203,7 @@ export default class Game {
                     if (this.sounds.explosion) this.sounds.explosion.play();
                     this.consecutiveHits = 0;
                     this.scoreMultiplier = 1;
+                    console.log('Player hit by enemy bullet, health:', this.player.health);
                 }
             });
         });
@@ -221,6 +225,7 @@ export default class Game {
                         this.score += Math.round(baseScore * this.scoreMultiplier);
                         enemy.active = false;
                         if (this.sounds.explosion) this.sounds.explosion.play();
+                        console.log('Enemy defeated, score:', this.score);
                     }
                 }
             });
@@ -229,12 +234,16 @@ export default class Game {
         // 玩家与道具碰撞
         this.powerups.forEach(powerup => {
             if (this.isColliding(this.player, powerup)) {
+                console.log('Player collided with powerup:', powerup.type);
                 if (powerup.type === 'life') {
                     this.player.health = Math.min(this.player.health + 50, 100);
+                    console.log('Life powerup applied, new health:', this.player.health);
                 } else if (powerup.type === 'energy') {
                     this.player.health = Math.min(this.player.health + 20, 100);
+                    console.log('Energy powerup applied, new health:', this.player.health);
                 } else {
                     this.player.weaponSystem.setWeapon(powerup.type);
+                    console.log('Weapon powerup applied:', powerup.type);
                 }
                 powerup.active = false;
                 if (this.sounds.powerup) this.sounds.powerup.play();
