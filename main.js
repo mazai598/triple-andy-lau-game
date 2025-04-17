@@ -98,20 +98,30 @@ const translations = {
 };
 
 function updateLanguage() {
-    document.querySelectorAll('[data-i18n]').forEach(element => {
-        const key = element.getAttribute('data-i18n');
-        element.textContent = translations[settings.language][key];
-    });
-    updateKeyBindingDisplay();
-    if (game) game.hud.updateLanguage();
+    try {
+        document.querySelectorAll('[data-i18n]').forEach(element => {
+            const key = element.getAttribute('data-i18n');
+            element.textContent = translations[settings.language][key];
+        });
+        updateKeyBindingDisplay();
+        if (game) game.hud.updateLanguage();
+        console.log('语言更新成功');
+    } catch (error) {
+        console.error('语言更新失败:', error);
+    }
 }
 
 function updateKeyBindingDisplay() {
-    keyUp.value = settings.keyBindings.up.join('/');
-    keyDown.value = settings.keyBindings.down.join('/');
-    keyLeft.value = settings.keyBindings.left.join('/');
-    keyRight.value = settings.keyBindings.right.join('/');
-    keyShoot.value = settings.keyBindings.shoot.join('/');
+    try {
+        keyUp.value = settings.keyBindings.up.join('/');
+        keyDown.value = settings.keyBindings.down.join('/');
+        keyLeft.value = settings.keyBindings.left.join('/');
+        keyRight.value = settings.keyBindings.right.join('/');
+        keyShoot.value = settings.keyBindings.shoot.join('/');
+        console.log('按键绑定显示更新成功');
+    } catch (error) {
+        console.error('按键绑定显示更新失败:', error);
+    }
 }
 
 function bindKeyInput(input, action) {
@@ -131,13 +141,23 @@ function bindKeyInput(input, action) {
 function preloadAssets() {
     return new Promise((resolve) => {
         const imagePaths = [
-            'assets/images/background.png', 'assets/images/player_sheet.png',
-            'assets/images/enemy_small.png', 'assets/images/enemy_medium.png',
-            'assets/images/enemy_large.png', 'assets/images/enemy_stealth.png',
-            'assets/images/boss_mini.png', 'assets/images/boss_mid.png',
-            'assets/images/boss_final.png', 'assets/images/bullet.png',
-            'assets/images/powerup_life.png', 'assets/images/powerup_energy.png',
-            'assets/images/powerup_laser.png', 'assets/images/powerup_penta.png',
+            'assets/images/background.png',
+            'assets/images/player_sheet.png',
+            'assets/images/enemy_small.png',
+            'assets/images/enemy_medium.png',
+            'assets/images/enemy_large.png',
+            'assets/images/enemy_stealth.png',
+            'assets/images/boss_mini.png',
+            'assets/images/boss_mid.png',
+            'assets/images/boss_final.png',
+            'assets/images/bullet.png',
+            'assets/images/bullet_laser.png',
+            'assets/images/bullet_penta.png',
+            'assets/images/bullet_wave.png',
+            'assets/images/powerup_life.png',
+            'assets/images/powerup_energy.png',
+            'assets/images/powerup_laser.png',
+            'assets/images/powerup_penta.png',
             'assets/images/powerup_wave.png'
         ];
         const images = {};
@@ -163,11 +183,12 @@ function preloadAssets() {
 
 async function startGame() {
     try {
+        console.log('开始加载资源...');
         const images = await preloadAssets();
         if (!images || Object.values(images).every(img => img === null)) {
-            alert(translations[settings.language].game_over + ': 资源加载失败');
-            return;
+            throw new Error('所有资源加载失败');
         }
+        console.log('资源加载完成，开始初始化游戏...');
         menuContainer.style.display = 'none';
         canvas.style.display = 'block';
         virtualControls.style.display = isMobileDevice() ? 'flex' : 'none';
@@ -177,6 +198,7 @@ async function startGame() {
         continueButton.disabled = false;
         gameOver.style.display = 'none';
         pauseMenu.style.display = 'none';
+        console.log('游戏成功启动');
     } catch (error) {
         console.error('启动游戏失败:', error);
         alert('游戏启动失败，请检查控制台日志');
@@ -194,6 +216,7 @@ function continueGame() {
             game.loadState(gameState);
             game.resize(window.innerWidth, window.innerHeight);
             game.start();
+            console.log('继续游戏成功');
         } catch (error) {
             console.error('继续游戏失败:', error);
             alert('继续游戏失败，请检查控制台日志');
@@ -203,45 +226,70 @@ function continueGame() {
 }
 
 function showSettings() {
-    menuContainer.querySelector('.menu-buttons').style.display = 'none';
-    settingsMenu.style.display = 'block';
-    soundVolume.value = settings.soundVolume;
-    graphicsQuality.value = settings.graphicsQuality;
-    languageSelect.value = settings.language;
-    updateKeyBindingDisplay();
+    try {
+        menuContainer.querySelector('.menu-buttons').style.display = 'none';
+        settingsMenu.style.display = 'block';
+        soundVolume.value = settings.soundVolume;
+        graphicsQuality.value = settings.graphicsQuality;
+        languageSelect.value = settings.language;
+        updateKeyBindingDisplay();
+        console.log('设置菜单显示成功');
+    } catch (error) {
+        console.error('显示设置菜单失败:', error);
+    }
 }
 
 function saveSettingsHandler(e) {
     e.preventDefault();
-    settings.soundVolume = parseFloat(soundVolume.value);
-    settings.graphicsQuality = graphicsQuality.value;
-    settings.language = languageSelect.value;
-    if (game) game.updateSettings(settings);
-    updateLanguage();
-    closeSettingsHandler();
+    try {
+        settings.soundVolume = parseFloat(soundVolume.value);
+        settings.graphicsQuality = graphicsQuality.value;
+        settings.language = languageSelect.value;
+        if (game) game.updateSettings(settings);
+        updateLanguage();
+        closeSettingsHandler();
+        console.log('设置保存成功');
+    } catch (error) {
+        console.error('保存设置失败:', error);
+    }
 }
 
 function closeSettingsHandler(e) {
     if (e) e.preventDefault();
-    settingsMenu.style.display = 'none';
-    menuContainer.querySelector('.menu-buttons').style.display = 'block';
+    try {
+        settingsMenu.style.display = 'none';
+        menuContainer.querySelector('.menu-buttons').style.display = 'block';
+        console.log('设置菜单关闭成功');
+    } catch (error) {
+        console.error('关闭设置菜单失败:', error);
+    }
 }
 
 function returnToMenu() {
-    if (game) {
-        gameState = game.saveState();
-        game.stop();
-        game = null;
+    try {
+        if (game) {
+            gameState = game.saveState();
+            game.stop();
+            game = null;
+        }
+        canvas.style.display = 'none';
+        menuContainer.style.display = 'block';
+        virtualControls.style.display = 'none';
+        gameOver.style.display = 'none';
+        pauseMenu.style.display = 'none';
+        console.log('返回主菜单成功');
+    } catch (error) {
+        console.error('返回主菜单失败:', error);
     }
-    canvas.style.display = 'none';
-    menuContainer.style.display = 'block';
-    virtualControls.style.display = 'none';
-    gameOver.style.display = 'none';
-    pauseMenu.style.display = 'none';
 }
 
 function exitGame() {
-    window.close();
+    try {
+        window.close();
+        console.log('游戏退出');
+    } catch (error) {
+        console.error('退出游戏失败:', error);
+    }
 }
 
 function isMobileDevice() {
@@ -249,36 +297,50 @@ function isMobileDevice() {
 }
 
 function handleOrientation() {
-    if (isMobileDevice()) {
-        if (window.innerHeight > window.innerWidth) {
-            virtualControls.style.flexDirection = 'column';
-            virtualControls.style.bottom = '10px';
-            virtualControls.style.left = '10px';
-        } else {
-            virtualControls.style.flexDirection = 'row';
-            virtualControls.style.bottom = '10px';
-            virtualControls.style.left = '50%';
-            virtualControls.style.transform = 'translateX(-50%)';
+    try {
+        if (isMobileDevice()) {
+            if (window.innerHeight > window.innerWidth) {
+                virtualControls.style.flexDirection = 'column';
+                virtualControls.style.bottom = '10px';
+                virtualControls.style.left = '10px';
+            } else {
+                virtualControls.style.flexDirection = 'row';
+                virtualControls.style.bottom = '10px';
+                virtualControls.style.left = '50%';
+                virtualControls.style.transform = 'translateX(-50%)';
+            }
+            if (game) game.resize(window.innerWidth, window.innerHeight);
+            console.log('设备方向调整成功');
         }
-        if (game) game.resize(window.innerWidth, window.innerHeight);
+    } catch (error) {
+        console.error('设备方向调整失败:', error);
     }
 }
 
 function setupVirtualControls() {
-    const virtualKeys = {};
-    ['left', 'up', 'down', 'right', 'shoot'].forEach(id => {
-        const button = document.getElementById(`virtual-${id}`);
-        button.addEventListener('touchstart', (e) => { e.preventDefault(); virtualKeys[id] = true; });
-        button.addEventListener('touchend', (e) => { e.preventDefault(); virtualKeys[id] = false; });
-        button.addEventListener('mousedown', (e) => { e.preventDefault(); virtualKeys[id] = true; });
-        button.addEventListener('mouseup', (e) => { e.preventDefault(); virtualKeys[id] = false; });
-    });
-    if (game) game.input.setVirtualKeys(virtualKeys);
+    try {
+        const virtualKeys = {};
+        ['left', 'up', 'down', 'right', 'shoot'].forEach(id => {
+            const button = document.getElementById(`virtual-${id}`);
+            button.addEventListener('touchstart', (e) => { e.preventDefault(); virtualKeys[id] = true; });
+            button.addEventListener('touchend', (e) => { e.preventDefault(); virtualKeys[id] = false; });
+            button.addEventListener('mousedown', (e) => { e.preventDefault(); virtualKeys[id] = true; });
+            button.addEventListener('mouseup', (e) => { e.preventDefault(); virtualKeys[id] = false; });
+        });
+        if (game) game.input.setVirtualKeys(virtualKeys);
+        console.log('虚拟按键设置成功');
+    } catch (error) {
+        console.error('虚拟按键设置失败:', error);
+    }
 }
 
 function updateHUD() {
-    if (game) {
-        hud.innerHTML = `生命: ${Math.max(0, game.player.health)} | 得分: ${game.score} | 波次: ${game.wave} | 难度: ${game.difficulty.toFixed(1)}x`;
+    try {
+        if (game) {
+            hud.innerHTML = `生命: ${Math.max(0, game.player.health)} | 得分: ${game.score} | 波次: ${game.wave} | 难度: ${game.difficulty.toFixed(1)}x`;
+        }
+    } catch (error) {
+        console.error('HUD 更新失败:', error);
     }
 }
 

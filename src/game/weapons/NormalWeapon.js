@@ -1,22 +1,21 @@
 export default class NormalWeapon {
-    constructor() {
-        this.shootDelay = 0.2;
-        this.lastShot = 0;
+    constructor(game) {
+        this.game = game;
+        this.cooldown = 10;
     }
 
-    shoot(x, y, bullets) {
-        const now = Date.now() / 1000;
-        if (now - this.lastShot < this.shootDelay) return;
-        this.lastShot = now;
-        bullets.push({
-            x: x - 5,
-            y,
-            width: 10,
-            height: 20,
+    shoot(x, y) {
+        this.game.player.weaponSystem.bullets.push({
+            x: x,
+            y: y,
+            width: 2,
+            height: 10,
             speed: 10,
-            damage: 20,
+            damage: 10,
             active: true,
-            color: '#fff'
+            imagePath: 'assets/images/bullet.png',
+            color: '#ff0000'
         });
+        if (this.game.audioEngine.effects.shoot) this.game.audioEngine.effects.shoot.play();
     }
 }

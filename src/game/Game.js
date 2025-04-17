@@ -31,7 +31,6 @@ export default class Game {
         this.consecutiveHits = 0;
         this.difficulty = 1.0;
 
-        // 超级代码：高级音效系统
         this.audioEngine = {
             bgm: new Audio('assets/sounds/bgm.mp3'),
             effects: {
@@ -69,6 +68,7 @@ export default class Game {
     stop() {
         try {
             this.audioEngine.bgm.pause();
+            console.log('背景音乐已暂停');
         } catch (error) {
             console.warn('停止背景音乐失败:', error);
         }
@@ -79,12 +79,13 @@ export default class Game {
         try {
             this.audioEngine.bgm.volume = settings.soundVolume;
             Object.values(this.audioEngine.effects).forEach(sound => sound.volume = settings.soundVolume);
+            this.quality = settings.graphicsQuality;
+            this.hud.updateLanguage();
+            this.input.updateKeyBindings(settings.keyBindings);
+            console.log('游戏设置更新成功');
         } catch (error) {
-            console.warn('更新音量设置失败:', error);
+            console.warn('更新设置失败:', error);
         }
-        this.quality = settings.graphicsQuality;
-        this.hud.updateLanguage();
-        this.input.updateKeyBindings(settings.keyBindings);
     }
 
     resize(width, height) {
@@ -258,15 +259,15 @@ export default class Game {
                     } else if (powerup.type === 'energy') {
                         this.player.health += 30;
                         console.log('能量道具生效, 新生命:', this.player.health);
-                    } else if (powerup.type === 'wave') {
-                        this.player.weaponSystem.setWeapon('wave');
-                        console.log('波形武器道具生效');
                     } else if (powerup.type === 'laser') {
                         this.player.weaponSystem.setWeapon('laser');
                         console.log('激光武器道具生效');
                     } else if (powerup.type === 'penta') {
                         this.player.weaponSystem.setWeapon('penta');
                         console.log('五向武器道具生效');
+                    } else if (powerup.type === 'wave') {
+                        this.player.weaponSystem.setWeapon('wave');
+                        console.log('波形武器道具生效');
                     }
                     powerup.active = false;
                     if (this.audioEngine.effects.powerup) this.audioEngine.effects.powerup.play();
@@ -281,6 +282,7 @@ export default class Game {
                 this.gameOver = true;
                 this.hud.showGameOver();
                 this.gameOverElement.style.display = 'block';
+                console.log('游戏结束，玩家生命值为 0');
             }
         } catch (error) {
             console.error('碰撞检测失败:', error);
@@ -362,6 +364,7 @@ export default class Game {
                 this.pauseMenuElement.style.display = 'none';
                 this.animate();
             }
+            console.log(`游戏${this.paused ? '暂停' : '恢复'}`);
         } catch (error) {
             console.error('暂停/恢复游戏失败:', error);
         }

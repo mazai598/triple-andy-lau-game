@@ -19,15 +19,26 @@ export default class StealthEnemy extends Enemy {
 
     draw() {
         if (!this.isCloaked) {
-            this.game.ctx.fillStyle = '#00ccff';
-            this.game.ctx.globalAlpha = 0.5;
-            this.game.ctx.fillRect(this.x, this.y, this.width, this.height);
-            this.game.ctx.globalAlpha = 1;
+            if (this.image) {
+                this.game.ctx.globalAlpha = 0.5;
+                this.game.ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+                this.game.ctx.globalAlpha = 1;
+            } else {
+                this.game.ctx.fillStyle = '#00ccff';
+                this.game.ctx.globalAlpha = 0.5;
+                this.game.ctx.fillRect(this.x, this.y, this.width, this.height);
+                this.game.ctx.globalAlpha = 1;
+            }
         }
-        this.game.ctx.fillStyle = '#ff0000';
         this.bullets.forEach(bullet => {
             if (bullet.active) {
-                this.game.ctx.fillRect(bullet.x, bullet.y, bullet.width || 2, bullet.height || 10);
+                const bulletImage = this.game.images[bullet.imagePath];
+                if (bulletImage) {
+                    this.game.ctx.drawImage(bulletImage, bullet.x - bullet.width / 2, bullet.y, bullet.width, bullet.height);
+                } else {
+                    this.game.ctx.fillStyle = '#ff0000';
+                    this.game.ctx.fillRect(bullet.x - bullet.width / 2, bullet.y, bullet.width || 2, bullet.height || 10);
+                }
             }
         });
     }

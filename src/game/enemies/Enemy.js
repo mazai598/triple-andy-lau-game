@@ -12,6 +12,7 @@ export default class Enemy {
         this.isBoss = isBoss;
         this.bullets = [];
         this.shootCooldown = 0;
+        this.image = game.images[`assets/images/enemy_${type}.png`] || null;
     }
 
     update(player) {
@@ -20,7 +21,7 @@ export default class Enemy {
             if (this.y > this.game.canvas.height) this.active = false;
             this.shootCooldown--;
             if (this.shootCooldown <= 0 && Math.random() < 0.01 * this.game.difficulty) {
-                this.bullets.push({ x: this.x + this.width / 2, y: this.y + this.height, width: 2, height: 10, speed: 5, active: true });
+                this.bullets.push({ x: this.x + this.width / 2, y: this.y + this.height, width: 2, height: 10, speed: 5, active: true, imagePath: 'assets/images/enemy_bullet.png' });
                 this.shootCooldown = 60;
             }
             this.bullets.forEach(bullet => {
@@ -36,12 +37,21 @@ export default class Enemy {
 
     draw() {
         try {
-            this.game.ctx.fillStyle = this.isBoss ? '#ff0000' : '#ffcc00';
-            this.game.ctx.fillRect(this.x, this.y, this.width, this.height);
-            this.game.ctx.fillStyle = '#ff0000';
+            if (this.image) {
+                this.game.ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+            } else {
+                this.game.ctx.fillStyle = this.isBoss ? '#ff0000' : '#ffcc00';
+                this.game.ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
             this.bullets.forEach(bullet => {
                 if (bullet.active) {
-                    this.game.ctx.fillRect(bullet.x, bullet.y, bullet.width || 2, bullet.height || 10);
+                    const bulletImage = this.game.images[bullet.imagePath];
+                    if (bulletImage) {
+                        this.game.ctx.drawImage(bulletImage, bullet.x - bullet.width / 2, bullet.y, bullet.width, bullet.height);
+                    } else {
+                        this.game.ctx.fillStyle = '#ff0000';
+                        this.game.ctx.fillRect(bullet.x - bullet.width / 2, bullet.y, bullet.width || 2, bullet.height || 10);
+                    }
                 }
             });
         } catch (error) {

@@ -37,7 +37,17 @@ export default class BossEnemy extends Enemy {
 
     shoot(player) {
         if (Math.random() < 0.02 * this.game.difficulty) {
-            this.bullets.push({ x: this.x + this.width / 2, y: this.y + this.height, width: 4, height: 15, active: true, speed: 6, targetX: player.x, targetY: player.y });
+            this.bullets.push({
+                x: this.x + this.width / 2,
+                y: this.y + this.height,
+                width: 4,
+                height: 15,
+                active: true,
+                speed: 6,
+                targetX: player.x,
+                targetY: player.y,
+                imagePath: 'assets/images/enemy_bullet.png'
+            });
         }
     }
 
@@ -51,10 +61,15 @@ export default class BossEnemy extends Enemy {
             }
             this.game.ctx.fillStyle = '#ffcc00';
             this.game.ctx.fillRect(this.x, this.y - 10, this.width * (this.health / (300 + this.game.wave * 50)), 5);
-            this.game.ctx.fillStyle = '#ff0000';
             this.bullets.forEach(bullet => {
                 if (bullet.active) {
-                    this.game.ctx.fillRect(bullet.x, bullet.y, bullet.width || 4, bullet.height || 15);
+                    const bulletImage = this.game.images[bullet.imagePath];
+                    if (bulletImage) {
+                        this.game.ctx.drawImage(bulletImage, bullet.x - bullet.width / 2, bullet.y, bullet.width, bullet.height);
+                    } else {
+                        this.game.ctx.fillStyle = '#ff0000';
+                        this.game.ctx.fillRect(bullet.x - bullet.width / 2, bullet.y, bullet.width || 4, bullet.height || 15);
+                    }
                 }
             });
         } catch (error) {
