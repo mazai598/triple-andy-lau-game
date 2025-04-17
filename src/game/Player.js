@@ -14,7 +14,7 @@ export default class Player {
         this.speed = 5;
         this.health = 100;
         this.maxHealth = 100;
-        this.laserCharges = 0; // 激光发射次数
+        this.laserCharges = 0;
         this.weaponSystem = new WeaponSystem(this);
         this.audioEngine = new AudioEngine(game.assets);
         this.audioEngine.setVolume(game.settings.soundVolume);
@@ -23,6 +23,12 @@ export default class Player {
         this.frameWidth = 64;
         this.frameHeight = 64;
         this.image = game.assets.images['assets/images/player_sheet.png'] || new Image();
+        if (!this.image || this.image.width === 0) {
+            console.warn('玩家战机图片 player_sheet.png 未加载');
+        }
+        // 尾焰粒子
+        this.trailTimer = 0;
+        this.trailInterval = 100;
     }
 
     update(keys, deltaTime = 16.67) {
@@ -46,6 +52,13 @@ export default class Player {
         this.y = Math.max(0, Math.min(this.y, this.canvas.height - this.height));
 
         this.weaponSystem.update(deltaTime);
+
+        // 尾焰粒子效果
+        this.trailTimer += deltaTime;
+        if (this.trailTimer >= this.trailInterval) {
+            this.game.particles.addTrail(this.x + this.width / 2 - 5, this.y + this.height, 10, 10);
+            this.trailTimer = 0;
+        }
     }
 
     draw() {

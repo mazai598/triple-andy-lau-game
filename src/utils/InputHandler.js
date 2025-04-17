@@ -23,7 +23,7 @@ export default class InputHandler {
         if (this.keyBindings.up.includes(code)) this.keys.up = isDown;
         if (this.keyBindings.down.includes(code)) this.keys.down = isDown;
         if (this.keyBindings.shoot.includes(code)) this.keys.shoot = isDown;
-        if (code === 'KeyL') this.keys.laser = isDown;
+        if (this.keyBindings.laser.includes(code)) this.keys.laser = isDown;
     }
 
     setVirtualKeys(virtualKeys) {

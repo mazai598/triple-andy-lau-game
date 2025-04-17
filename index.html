@@ -18,15 +18,19 @@
         <div class="loading-text">加载中...</div>
         <div id="loading-progress">0%</div>
     </div>
+    <div class="star-particles"></div>
     <video class="background-video" autoplay loop muted playsinline style="display: none;">
         <source src="assets/videos/menu_starfield.webm" type="video/webm">
         <source src="assets/videos/menu_starfield.mp4" type="video/mp4">
     </video>
     <div class="menu-container" style="display: none;">
         <div class="menu-buttons">
-            <h1 id="game-title">Triple Andy Lau Game</h1>
+            <h1 id="game-title">Triple Andy Lau 游戏</h1>
             <button id="start-game">开始游戏</button>
             <button id="continue-game" disabled>继续游戏</button>
+            <button id="leaderboard">排行榜</button>
+            <button id="help">帮助</button>
+            <button id="about">关于</button>
             <button id="settings">设置</button>
             <button id="exit">退出</button>
             <button id="install" style="display: none;">安装游戏</button>
@@ -78,6 +82,27 @@
             </div>
             <button id="save-settings">保存</button>
             <button id="close-settings">关闭</button>
+        </div>
+        <div class="modal" id="leaderboard-modal" style="display: none;">
+            <div class="modal-content">
+                <h2 id="leaderboard">排行榜</h2>
+                <p id="leaderboard-text"></p>
+                <button class="modal-close">关闭</button>
+            </div>
+        </div>
+        <div class="modal" id="help-modal" style="display: none;">
+            <div class="modal-content">
+                <h2 id="help">帮助</h2>
+                <p id="help-text"></p>
+                <button class="modal-close">关闭</button>
+            </div>
+        </div>
+        <div class="modal" id="about-modal" style="display: none;">
+            <div class="modal-content">
+                <h2 id="about">关于</h2>
+                <p id="about-text"></p>
+                <button class="modal-close">关闭</button>
+            </div>
         </div>
     </div>
     <canvas id="game-canvas" style="display: none;"></canvas>

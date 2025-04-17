@@ -6,6 +6,9 @@ const menuContainer = document.querySelector('.menu-container');
 const settingsMenu = document.querySelector('.settings-menu');
 const startButton = document.getElementById('start-game');
 const continueButton = document.getElementById('continue-game');
+const leaderboardButton = document.getElementById('leaderboard');
+const helpButton = document.getElementById('help');
+const aboutButton = document.getElementById('about');
 const settingsButton = document.getElementById('settings');
 const exitButton = document.getElementById('exit');
 const soundVolume = document.getElementById('sound-volume');
@@ -29,6 +32,9 @@ const returnMenuButton = document.getElementById('return-menu');
 const loadingScreen = document.getElementById('loading-screen');
 const loadingProgress = document.getElementById('loading-progress');
 const backgroundVideo = document.querySelector('.background-video');
+const leaderboardModal = document.getElementById('leaderboard-modal');
+const helpModal = document.getElementById('help-modal');
+const aboutModal = document.getElementById('about-modal');
 
 let game = null;
 let gameState = null;
@@ -45,6 +51,24 @@ let settings = {
         laser: ['KeyL']
     }
 };
+
+// 动态生成星光粒子
+function createStarParticles() {
+    const starParticles = document.querySelector('.star-particles');
+    for (let i = 0; i < 50; i++) {
+        const star = document.createElement('div');
+        star.style.position = 'absolute';
+        star.style.width = '2px';
+        star.style.height = '2px';
+        star.style.background = 'white';
+        star.style.borderRadius = '50%';
+        star.style.boxShadow = '0 0 5px white';
+        star.style.left = `${Math.random() * 100}%`;
+        star.style.top = `${Math.random() * 100}%`;
+        star.style.animation = `twinkle ${2 + Math.random() * 2}s infinite`;
+        starParticles.appendChild(star);
+    }
+}
 
 async function preloadAssets() {
     return new Promise((resolve) => {
@@ -84,7 +108,8 @@ async function preloadAssets() {
                 'assets/sounds/missile.mp3',
                 'assets/sounds/penta.mp3',
                 'assets/sounds/shoot.mp3',
-                'assets/sounds/wave.mp3'
+                'assets/sounds/wave.mp3',
+                'assets/sounds/click.mp3'
             ],
             videos: [
                 'assets/videos/menu_starfield.mp4',
@@ -170,8 +195,13 @@ async function initializeGame() {
         backgroundVideo.style.display = 'block';
         menuContainer.style.display = 'block';
         window.assets = assets;
+        createStarParticles();
         updateLanguage(settings.language);
         if (isMobileDevice()) setupVirtualControls();
+        // 播放背景音乐
+        const audioEngine = new AudioEngine(assets);
+        audioEngine.setVolume(settings.soundVolume);
+        audioEngine.play('bgm', true);
     } catch (error) {
         console.error('游戏初始化失败:', error);
         loadingScreen.innerHTML = '<div class="loading-text">加载失败，请刷新页面</div>';
@@ -219,6 +249,33 @@ function continueGame() {
     }
 }
 
+function showLeaderboard() {
+    leaderboardModal.style.display = 'flex';
+    updateLanguage(settings.language);
+    const audioEngine = new AudioEngine(window.assets);
+    audioEngine.play('click');
+}
+
+function showHelp() {
+    helpModal.style.display = 'flex';
+    updateLanguage(settings.language);
+    const audioEngine = new AudioEngine(window.assets);
+    audioEngine.play('click');
+}
+
+function showAbout() {
+    aboutModal.style.display = 'flex';
+    updateLanguage(settings.language);
+    const audioEngine = new AudioEngine(window.assets);
+    audioEngine.play('click');
+}
+
+function closeModal(modal) {
+    modal.style.display = 'none';
+    const audioEngine = new AudioEngine(window.assets);
+    audioEngine.play('click');
+}
+
 function showSettings() {
     try {
         menuContainer.querySelector('.menu-buttons').style.display = 'none';
@@ -228,6 +285,8 @@ function showSettings() {
         languageSelect.value = settings.language;
         updateKeyBindingDisplay();
         console.log('设置菜单显示成功');
+        const audioEngine = new AudioEngine(window.assets);
+        audioEngine.play('click');
     } catch (error) {
         console.error('显示设置菜单失败:', error);
     }
@@ -243,6 +302,8 @@ function saveSettingsHandler(e) {
         updateLanguage(settings.language);
         closeSettingsHandler();
         console.log('设置保存成功');
+        const audioEngine = new AudioEngine(window.assets);
+        audioEngine.play('click');
     } catch (error) {
         console.error('保存设置失败:', error);
     }
@@ -254,6 +315,8 @@ function closeSettingsHandler(e) {
         settingsMenu.style.display = 'none';
         menuContainer.querySelector('.menu-buttons').style.display = 'block';
         console.log('设置菜单关闭成功');
+        const audioEngine = new AudioEngine(window.assets);
+        audioEngine.play('click');
     } catch (error) {
         console.error('关闭设置菜单失败:', error);
     }
@@ -273,6 +336,8 @@ function returnToMenu() {
         gameOver.style.display = 'none';
         pauseMenu.style.display = 'none';
         console.log('返回主菜单成功');
+        const audioEngine = new AudioEngine(window.assets);
+        audioEngine.play('click');
     } catch (error) {
         console.error('返回主菜单失败:', error);
     }
@@ -282,6 +347,8 @@ function exitGame() {
     try {
         window.close();
         console.log('游戏退出');
+        const audioEngine = new AudioEngine(window.assets);
+        audioEngine.play('click');
     } catch (error) {
         console.error('退出游戏失败:', error);
     }
@@ -296,8 +363,8 @@ function handleOrientation() {
         if (isMobileDevice()) {
             const isPortrait = window.innerHeight > window.innerWidth;
             virtualControls.style.flexDirection = isPortrait ? 'column' : 'row';
-            virtualControls.style.bottom = '10px';
-            virtualControls.style.left = isPortrait ? '10px' : '50%';
+            virtualControls.style.bottom = '20px';
+            virtualControls.style.left = isPortrait ? '20px' : '50%';
             virtualControls.style.transform = isPortrait ? 'none' : 'translateX(-50%)';
             if (game) game.resize(window.innerWidth, window.innerHeight);
             console.log('设备方向调整成功');
@@ -371,6 +438,9 @@ function updateHUD() {
     try {
         if (game && !game.paused && !game.gameOver) {
             hud.innerHTML = `生命: ${Math.max(0, game.player.health)} | 得分: ${game.score} | 波次: ${game.wave} | 难度: ${game.difficulty.toFixed(1)}x | 武器: ${game.player.weaponSystem.currentWeapon} | 激光: ${game.player.laserCharges}`;
+            hud.style.opacity = '1';
+        } else {
+            hud.style.opacity = '0';
         }
     } catch (error) {
         console.error('HUD 更新失败:', error);
@@ -379,6 +449,9 @@ function updateHUD() {
 
 startButton.addEventListener('click', startGame);
 continueButton.addEventListener('click', continueGame);
+leaderboardButton.addEventListener('click', showLeaderboard);
+helpButton.addEventListener('click', showHelp);
+aboutButton.addEventListener('click', showAbout);
 settingsButton.addEventListener('click', showSettings);
 saveSettings.addEventListener('click', saveSettingsHandler);
 closeSettings.addEventListener('click', closeSettingsHandler);
@@ -388,9 +461,17 @@ resumeButton.addEventListener('click', () => {
     if (game) {
         game.togglePause();
         pauseMenu.style.display = 'none';
+        const audioEngine = new AudioEngine(window.assets);
+        audioEngine.play('click');
     }
 });
 returnMenuButton.addEventListener('click', returnToMenu);
+
+document.querySelectorAll('.modal-close').forEach(button => {
+    button.addEventListener('click', () => {
+        closeModal(button.closest('.modal'));
+    });
+});
 
 bindKeyInput(keyUp, 'up');
 bindKeyInput(keyDown, 'down');

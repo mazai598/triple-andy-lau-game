@@ -1,71 +1,90 @@
 export const translations = {
     zh: {
-        title: '我爱打飞机',
-        start: '开始游戏',
-        continue: '继续游戏',
+        loading: '加载中...',
+        game_title: 'Triple Andy Lau 游戏',
+        start_game: '开始游戏',
+        continue_game: '继续游戏',
         settings: '设置',
         exit: '退出',
+        install: '安装游戏',
+        settings_title: '设置',
         sound_volume: '音量',
         graphics_quality: '画质',
         language: '语言',
-        low: '低',
-        high: '高',
-        chinese: '中文',
-        english: 'English',
+        key_up: '上移',
+        key_down: '下移',
+        key_left: '左移',
+        key_right: '右移',
+        key_shoot: '射击',
+        key_laser: '激光',
         save: '保存',
         close: '关闭',
-        move_up: '向上',
-        move_down: '向下',
-        move_left: '向左',
-        move_right: '向右',
-        shoot: '射击',
         game_over: '游戏结束',
-        restart: '按 R 重新开始',
-        paused: '暂停',
-        resume: '按 P 继续',
-        menu: '主菜单',
-        waiting_for_key: '按任意键...',
-        install: '安装游戏'
+        restart_game: '重新开始',
+        return_menu: '返回菜单',
+        pause: '暂停',
+        resume: '继续',
+        waiting_for_key: '等待按键...',
+        low: '低',
+        medium: '中',
+        high: '高',
+        leaderboard: '排行榜',
+        help: '帮助',
+        about: '关于',
+        help_text: '操作说明：\nW/↑：上移\nS/↓：下移\nA/←：左移\nD/→：右移\nSpace：射击\nL：激光',
+        about_text: 'Triple Andy Lau 游戏\n版本：1.0.0\n开发者：xAI Team\n感谢你的游玩！',
+        leaderboard_text: '排行榜\n1. 玩家1 - 1000分\n2. 玩家2 - 800分\n3. 玩家3 - 500分'
     },
     en: {
-        title: 'I Love Air Combat',
-        start: 'Start Game',
-        continue: 'Continue Game',
+        loading: 'Loading...',
+        game_title: 'Triple Andy Lau Game',
+        start_game: 'Start Game',
+        continue_game: 'Continue Game',
         settings: 'Settings',
         exit: 'Exit',
+        install: 'Install Game',
+        settings_title: 'Settings',
         sound_volume: 'Sound Volume',
         graphics_quality: 'Graphics Quality',
         language: 'Language',
-        low: 'Low',
-        high: 'High',
-        chinese: 'Chinese',
-        english: 'English',
+        key_up: 'Move Up',
+        key_down: 'Move Down',
+        key_left: 'Move Left',
+        key_right: 'Move Right',
+        key_shoot: 'Shoot',
+        key_laser: 'Laser',
         save: 'Save',
         close: 'Close',
-        move_up: 'Move Up',
-        move_down: 'Move Down',
-        move_left: 'Move Left',
-        move_right: 'Move Right',
-        shoot: 'Shoot',
         game_over: 'Game Over',
-        restart: 'Press R to Restart',
-        paused: 'Paused',
-        resume: 'Press P to Resume',
-        menu: 'Main Menu',
-        waiting_for_key: 'Press any key...',
-        install: 'Install Game'
+        restart_game: 'Restart Game',
+        return_menu: 'Return to Menu',
+        pause: 'Pause',
+        resume: 'Resume',
+        waiting_for_key: 'Waiting for key...',
+        low: 'Low',
+        medium: 'Medium',
+        high: 'High',
+        leaderboard: 'Leaderboard',
+        help: 'Help',
+        about: 'About',
+        help_text: 'Controls:\nW/↑: Move Up\nS/↓: Move Down\nA/←: Move Left\nD/→: Move Right\nSpace: Shoot\nL: Laser',
+        about_text: 'Triple Andy Lau Game\nVersion: 1.0.0\nDeveloper: xAI Team\nThanks for playing!',
+        leaderboard_text: 'Leaderboard\n1. Player 1 - 1000\n2. Player 2 - 800\n3. Player 3 - 500'
     }
 };
 
 export function updateLanguage(lang) {
-    try {
-        document.querySelectorAll('[data-i18n]').forEach(element => {
-            const key = element.getAttribute('data-i18n');
-            const translation = translations[lang][key] || translations.en[key] || key;
-            element.textContent = translation;
+    document.querySelectorAll('[id]').forEach(element => {
+        const key = element.id.replace(/-/g, '_');
+        if (translations[lang][key]) {
+            element.textContent = translations[lang][key];
+        }
+    });
+    const graphicsQuality = document.getElementById('graphics-quality');
+    if (graphicsQuality) {
+        graphicsQuality.querySelectorAll('option').forEach((option, index) => {
+            const keys = ['low', 'medium', 'high'];
+            option.textContent = translations[lang][keys[index]];
         });
-        console.log('语言更新成功:', lang);
-    } catch (error) {
-        console.error('语言更新失败:', error);
     }
 }

@@ -1,52 +1,17 @@
-@font-face {
-  font-family: 'PixelFont';
-  src: url('assets/fonts/pixel-font.ttf') format('truetype');
-}
-
-* {
+body {
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
-}
-
-body {
   overflow: hidden;
-  font-family: 'PixelFont', 'Orbitron', sans-serif;
   background: #000;
-  touch-action: manipulation;
+  font-family: 'Arial', sans-serif;
 }
 
-#loading-screen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  background: #000;
-}
-
-.loading-bg {
+#game-canvas {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  z-index: -1;
-  filter: brightness(0.8);
-}
-
-.loading-text {
-  color: #00ffcc;
-  font-size: 2rem;
-  text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ff99;
-  animation: pulse 2s infinite;
-  z-index: 10;
 }
 
 .background-video {
@@ -57,178 +22,245 @@ body {
   height: 100%;
   object-fit: cover;
   z-index: -1;
-  filter: brightness(0.7);
+  opacity: 0.8;
 }
 
+/* 星光粒子效果 */
+.star-particles {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.star-particles::before {
+  content: '';
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 5px white;
+  animation: twinkle 2s infinite;
+}
+
+.star-particles::after {
+  content: '';
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 5px white;
+  animation: twinkle 3s infinite;
+}
+
+@keyframes twinkle {
+  0% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.5); }
+}
+
+/* 菜单样式 */
 .menu-container {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
-  color: #00ffcc;
-  text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ff99;
-  z-index: 10;
-  animation: pulse 2s infinite;
+  z-index: 1;
 }
 
-h1 {
-  font-size: 4rem;
-  margin-bottom: 2rem;
-  animation: glow 2s ease-in-out infinite;
-}
-
-.menu-buttons button, .settings-menu button, .install-button {
-  display: block;
-  margin: 1rem auto;
-  padding: 1rem 2rem;
-  font-size: 1.5rem;
-  font-family: 'PixelFont', sans-serif;
-  background: linear-gradient(45deg, #00ccff, #0066ff);
-  border: 2px solid #fff;
-  border-radius: 10px;
+.menu-buttons h1 {
   color: #fff;
-  cursor: pointer;
-  transition: transform 0.3s, box-shadow 0.3s;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-  z-index: 100;
-}
-
-.menu-buttons button:hover, .settings-menu button:hover, .install-button:hover {
-  transform: scale(1.1);
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
-}
-
-.menu-buttons button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.settings-menu {
-  background: rgba(0, 0, 0, 0.9);
-  padding: 2rem;
-  border-radius: 10px;
-  color: #fff;
-  z-index: 100;
-}
-
-.settings-menu label {
-  display: block;
-  margin: 1rem 0;
-  font-size: 1.2rem;
-}
-
-.settings-menu select, .settings-menu input[type="range"] {
-  width: 100%;
-  padding: 0.5rem;
-}
-
-.settings-menu input[type="text"] {
-  background: #333;
-  color: #fff;
-  border: 1px solid #fff;
-  padding: 0.5rem;
-  font-family: 'PixelFont', sans-serif;
-  cursor: pointer;
+  font-size: 48px;
+  text-shadow: 0 0 10px #00f, 0 0 20px #00f;
+  animation: glow 2s infinite;
 }
 
 @keyframes glow {
-  0% { text-shadow: 0 0 10px #ff007a; }
-  50% { text-shadow: 0 0 20px #00d4ff; }
-  100% { text-shadow: 0 0 10px #ff007a; }
+  0% { text-shadow: 0 0 10px #00f, 0 0 20px #00f; }
+  50% { text-shadow: 0 0 20px #00f, 0 0 30px #00f; }
+  100% { text-shadow: 0 0 10px #00f, 0 0 20px #00f; }
 }
 
-@keyframes pulse {
-  0% { text-shadow: 0 0 10px #00ffcc; }
-  50% { text-shadow: 0 0 20px #00ff99; }
-  100% { text-shadow: 0 0 10px #00ffcc; }
+.menu-buttons button, .settings-menu button, .modal-content button {
+  display: block;
+  margin: 15px auto;
+  padding: 12px 30px;
+  font-size: 20px;
+  color: #fff;
+  background: linear-gradient(45deg, #00f, #0ff);
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.3s;
+  box-shadow: 0 0 10px #00f;
 }
 
-#game-canvas {
+.menu-buttons button:hover, .settings-menu button:hover, .modal-content button:hover {
+  transform: scale(1.1);
+  background: linear-gradient(45deg, #0ff, #00f);
+}
+
+.menu-buttons button:active, .settings-menu button:active, .modal-content button:active {
+  transform: scale(0.95);
+}
+
+/* 设置菜单 */
+.settings-menu {
+  background: rgba(0, 0, 0, 0.8);
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 0 20px #00f;
+  color: #fff;
+}
+
+.settings-item {
+  margin: 15px 0;
+}
+
+.settings-item label {
+  display: block;
+  font-size: 18px;
+  margin-bottom: 5px;
+}
+
+.settings-item input, .settings-item select {
+  width: 100%;
+  padding: 8px;
+  font-size: 16px;
+  border-radius: 5px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* 模态窗口 */
+.modal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
+.modal-content {
+  background: rgba(0, 0, 0, 0.8);
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 0 20px #00f;
+  color: #fff;
+  max-width: 80%;
+  max-height: 80%;
+  overflow-y: auto;
+  text-align: center;
+}
+
+.modal-content h2 {
+  font-size: 28px;
+  margin-bottom: 15px;
+}
+
+.modal-content p {
+  font-size: 18px;
+  white-space: pre-wrap;
+}
+
+/* HUD */
+#hud {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: #fff;
+  font-size: 18px;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 10px;
+  border-radius: 10px;
+  transition: opacity 0.3s;
+}
+
+/* 游戏结束和暂停界面 */
+#game-over, #pause-menu {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.8);
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 0 20px #f00;
+  color: #fff;
+  text-align: center;
+}
+
+#game-over h2, #pause-menu h2 {
+  font-size: 36px;
+  margin-bottom: 20px;
+}
+
+/* 虚拟按键 */
 .virtual-controls {
   position: fixed;
   bottom: 20px;
-  left: 20px;
-  right: 20px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  justify-content: space-between;
-  z-index: 10;
+  gap: 10px;
+  z-index: 1;
 }
 
 .virtual-controls button {
   width: 60px;
   height: 60px;
-  font-size: 2rem;
-  background: linear-gradient(45deg, #ff007a, #00d4ff);
-  border: 2px solid #fff;
   border-radius: 50%;
+  border: none;
+  background: linear-gradient(45deg, #00f, #0ff);
   color: #fff;
-  text-align: center;
-  cursor: pointer;
-  touch-action: manipulation;
-  opacity: 0.8;
+  font-size: 24px;
+  box-shadow: 0 0 10px #00f;
+  transition: transform 0.1s, background 0.2s;
+}
+
+.virtual-controls button:hover {
+  background: linear-gradient(45deg, #0ff, #00f);
 }
 
 .virtual-controls button:active {
-  opacity: 1;
-  transform: scale(1.1);
+  transform: scale(0.9);
+  background: linear-gradient(45deg, #f00, #ff0);
 }
 
-#virtual-shoot {
+/* 加载界面 */
+#loading-screen {
   position: fixed;
-  bottom: 100px;
-  right: 20px;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  z-index: 3;
 }
 
-.hud {
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  color: #00ffcc;
-  font-size: 1.2rem;
-  text-shadow: 0 0 5px #00ffcc;
-  z-index: 10;
+.loading-text {
+  font-size: 36px;
+  text-shadow: 0 0 10px #00f;
 }
 
-.game-over, .pause-menu {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  color: #00ffcc;
-  text-shadow: 0 0 10px #00ffcc;
-  background: rgba(0, 0, 0, 0.9);
-  padding: 2rem;
-  border-radius: 10px;
-  z-index: 100;
-}
-
-.game-over h2, .pause-menu h2 {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-}
-
-.game-over p, .pause-menu p {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-.game-over button, .pause-menu button {
-  margin: 0.5rem;
-}
-
-@media (max-width: 768px) {
-  h1 { font-size: 2.5rem; }
-  .menu-buttons button, .settings-menu button, .install-button { font-size: 1.2rem; padding: 0.8rem 1.5rem; }
-  .settings-menu { padding: 1rem; }
-  .loading-text { font-size: 1.5rem; }
-  .virtual-controls { display: flex; }
+#loading-progress {
+  margin-top: 20px;
+  font-size: 24px;
 }
