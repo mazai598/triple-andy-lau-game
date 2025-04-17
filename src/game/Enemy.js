@@ -1,8 +1,8 @@
 export default class Enemy {
     constructor(game, wave, isBoss, type = 'small') {
         this.game = game;
-        this.width = 40;
-        this.height = 40;
+        this.width = { small: 30, medium: 40, large: 50, boss: 80 }[type] || 30;
+        this.height = { small: 30, medium: 40, large: 50, boss: 80 }[type] || 30;
         this.x = Math.random() * (game.canvas.width - this.width);
         this.y = -this.height;
         this.speed = 2 + wave * 0.5;
@@ -15,25 +15,50 @@ export default class Enemy {
     }
 
     update(player) {
-        this.y += this.speed;
-        if (this.y > this.game.canvas.height) this.active = false;
-        this.shootCooldown--;
-        if (this.shootCooldown <= 0 && Math.random() < 0.01 * this.game.difficulty) {
-            this.bullets.push({ x: this.x + this.width / 2, y: this.y + this.height, active: true, speed: 5 });
-            this.shootCooldown = 60;
+        try {
+            this.y += this.speed;
+            if (this.y > this.game.canvas.height) this.active = false;
+            this.shootCooldown--;
+            if (this.shootCooldown <= 0 && Math.random() < 0.01 * this.game.difficulty) {
+                this.bullets.push({ x: this.x + this.width / 2, y: this.y + this.height, width: 2, height: 10, speed: 5, active: true });
+                this.shootCooldown = 60;
+            }
+            this.bullets.forEach(bullet => {
+                bullet.y += bullet.speed;
+                if (bullet.y > this.game.canvas.height) bullet.active = false;
+            });
+            this.bullets = this.bullets.filter(b => b.active);
+        } catch (error) {
+            console.error('敌人更新失败:', error);
+            this.active = false;
         }
     }
 
     draw() {
-        this.game.ctx.fillStyle = this.isBoss ? '#ff0000' : '#ffcc00';
-        this.game.ctx.fillRect(this.x, this.y, this.width, this.height);
+        try {
+            this.game.ctx.fillStyle = this.isBoss ? '#ff0000' : '#ffcc00';
+            this.game.ctx.fillRect(this.x, this.y, this.width, this.height);
+            this.game.ctx.fillStyle = '#ff0000';
+            this.bullets.forEach(bullet => {
+                if (bullet.active) {
+                    this.game.ctx.fillRect(bullet.x, bullet.y, bullet.width || 2, bullet.height || 10);
+                }
+            });
+        } catch (error) {
+            console.error('敌人绘制失败:', error);
+        }
     }
 
     resize(width, height) {
-        this.width = 40 * (width / 1920);
-        this.height = 40 * (height / 1440);
-        this.x = Math.max(0, Math.min(this.x, width - this.width));
-        this.y = Math.max(-this.height, Math.min(this.y, height));
+        try {
+            const scale = width / 1920;
+            this.width *= scale;
+            this.height *= scale;
+            this.x = Math.max(0, Math.min(this.x, width - this.width));
+            this.y = Math.max(-this.height, Math.min(this.y, height));
+        } catch (error) {
+            console.error('敌人调整大小失败:', error);
+        }
     }
 
     saveState() {

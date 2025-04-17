@@ -4,15 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>极致飞机大战</title>
-    <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <style>
+        @font-face {
+            font-family: 'PixelFont';
+            src: url('assets/fonts/pixel-font.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
         body {
             margin: 0;
             padding: 0;
             overflow: hidden;
             background: linear-gradient(135deg, #0a0a2a, #1a1a4a);
             touch-action: manipulation;
-            font-family: 'Orbitron', sans-serif;
+            font-family: 'PixelFont', 'Orbitron', sans-serif;
         }
         #game-canvas {
             display: none;

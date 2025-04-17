@@ -134,48 +134,71 @@ function preloadAssets() {
             'assets/images/background.png', 'assets/images/player_sheet.png',
             'assets/images/enemy_small.png', 'assets/images/enemy_medium.png',
             'assets/images/enemy_large.png', 'assets/images/enemy_stealth.png',
-            'assets/images/enemy_boss.png', 'assets/images/bullet.png',
+            'assets/images/boss_mini.png', 'assets/images/boss_mid.png',
+            'assets/images/boss_final.png', 'assets/images/bullet.png',
             'assets/images/powerup_life.png', 'assets/images/powerup_energy.png',
             'assets/images/powerup_laser.png', 'assets/images/powerup_penta.png',
-            'assets/images/powerup_shield.png'
+            'assets/images/powerup_wave.png'
         ];
         const images = {};
         let loaded = 0;
         imagePaths.forEach(path => {
             const img = new Image();
             img.src = path;
-            img.onload = () => { loaded++; images[path] = img; if (loaded === imagePaths.length) resolve(images); };
-            img.onerror = () => { loaded++; images[path] = null; console.warn(`图片加载失败: ${path}`); if (loaded === imagePaths.length) resolve(images); };
+            img.onload = () => {
+                loaded++;
+                images[path] = img;
+                console.log(`成功加载图片: ${path}`);
+                if (loaded === imagePaths.length) resolve(images);
+            };
+            img.onerror = () => {
+                loaded++;
+                images[path] = null;
+                console.warn(`图片加载失败: ${path}`);
+                if (loaded === imagePaths.length) resolve(images);
+            };
         });
     });
 }
 
 async function startGame() {
-    const images = await preloadAssets();
-    if (!images || Object.values(images).every(img => img === null)) {
-        alert(translations[settings.language].game_over + ': 资源加载失败');
-        return;
+    try {
+        const images = await preloadAssets();
+        if (!images || Object.values(images).every(img => img === null)) {
+            alert(translations[settings.language].game_over + ': 资源加载失败');
+            return;
+        }
+        menuContainer.style.display = 'none';
+        canvas.style.display = 'block';
+        virtualControls.style.display = isMobileDevice() ? 'flex' : 'none';
+        game = new Game(canvas, settings, images);
+        game.resize(window.innerWidth, window.innerHeight);
+        game.start();
+        continueButton.disabled = false;
+        gameOver.style.display = 'none';
+        pauseMenu.style.display = 'none';
+    } catch (error) {
+        console.error('启动游戏失败:', error);
+        alert('游戏启动失败，请检查控制台日志');
+        returnToMenu();
     }
-    menuContainer.style.display = 'none';
-    canvas.style.display = 'block';
-    virtualControls.style.display = isMobileDevice() ? 'flex' : 'none';
-    game = new Game(canvas, settings, images);
-    game.resize(window.innerWidth, window.innerHeight);
-    game.start();
-    continueButton.disabled = false;
-    gameOver.style.display = 'none';
-    pauseMenu.style.display = 'none';
 }
 
 function continueGame() {
     if (gameState) {
-        menuContainer.style.display = 'none';
-        canvas.style.display = 'block';
-        virtualControls.style.display = isMobileDevice() ? 'flex' : 'none';
-        game = new Game(canvas, settings);
-        game.loadState(gameState);
-        game.resize(window.innerWidth, window.innerHeight);
-        game.start();
+        try {
+            menuContainer.style.display = 'none';
+            canvas.style.display = 'block';
+            virtualControls.style.display = isMobileDevice() ? 'flex' : 'none';
+            game = new Game(canvas, settings);
+            game.loadState(gameState);
+            game.resize(window.innerWidth, window.innerHeight);
+            game.start();
+        } catch (error) {
+            console.error('继续游戏失败:', error);
+            alert('继续游戏失败，请检查控制台日志');
+            returnToMenu();
+        }
     }
 }
 
@@ -247,8 +270,10 @@ function setupVirtualControls() {
         const button = document.getElementById(`virtual-${id}`);
         button.addEventListener('touchstart', (e) => { e.preventDefault(); virtualKeys[id] = true; });
         button.addEventListener('touchend', (e) => { e.preventDefault(); virtualKeys[id] = false; });
+        button.addEventListener('mousedown', (e) => { e.preventDefault(); virtualKeys[id] = true; });
+        button.addEventListener('mouseup', (e) => { e.preventDefault(); virtualKeys[id] = false; });
     });
-    game.input.setVirtualKeys(virtualKeys);
+    if (game) game.input.setVirtualKeys(virtualKeys);
 }
 
 function updateHUD() {

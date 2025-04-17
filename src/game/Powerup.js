@@ -7,7 +7,7 @@ export default class Powerup {
         this.y = -this.height;
         this.speed = 3 + game.difficulty;
         this.active = true;
-        this.type = ['life', 'energy', 'laser', 'penta', 'shield'][Math.floor(Math.random() * 5)];
+        this.type = ['life', 'energy', 'laser', 'penta', 'wave'][Math.floor(Math.random() * 5)];
         this.image = game.images[`assets/images/powerup_${this.type}.png`] || null;
     }
 

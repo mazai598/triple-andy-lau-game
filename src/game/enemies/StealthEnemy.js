@@ -24,5 +24,11 @@ export default class StealthEnemy extends Enemy {
             this.game.ctx.fillRect(this.x, this.y, this.width, this.height);
             this.game.ctx.globalAlpha = 1;
         }
+        this.game.ctx.fillStyle = '#ff0000';
+        this.bullets.forEach(bullet => {
+            if (bullet.active) {
+                this.game.ctx.fillRect(bullet.x, bullet.y, bullet.width || 2, bullet.height || 10);
+            }
+        });
     }
 }

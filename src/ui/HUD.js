@@ -4,11 +4,11 @@ export default class HUD {
     }
 
     updateLanguage() {
-        // 假设更新语言逻辑
+        // 语言更新由main.js处理
     }
 
     resize(width, height) {
-        // 调整HUD位置
+        // HUD位置调整由main.js处理
     }
 
     draw() {
