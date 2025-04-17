@@ -12,6 +12,7 @@
             overflow: hidden;
             background: linear-gradient(135deg, #0a0a2a, #1a1a4a);
             touch-action: manipulation;
+            font-family: 'Orbitron', sans-serif;
         }
         #game-canvas {
             display: none;
@@ -25,8 +26,13 @@
             transform: translate(-50%, -50%);
             text-align: center;
             color: #00ffcc;
-            font-family: 'Orbitron', sans-serif;
             text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ff99;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { text-shadow: 0 0 10px #00ffcc; }
+            50% { text-shadow: 0 0 20px #00ff99; }
+            100% { text-shadow: 0 0 10px #00ffcc; }
         }
         .menu-buttons button, .settings-menu button {
             display: block;
@@ -53,14 +59,18 @@
             color: #00ffcc;
             border: 1px solid #00ccff;
             border-radius: 5px;
+            transition: all 0.3s;
+        }
+        .settings-menu select:focus, .settings-menu input:focus {
+            box-shadow: 0 0 10px #00ffcc;
         }
         .virtual-controls {
             display: none;
             position: absolute;
             bottom: 10px;
             left: 10px;
-            flex-direction: row;
             gap: 10px;
+            transition: all 0.3s;
         }
         .virtual-controls button {
             width: 60px;
@@ -88,6 +98,11 @@
             background: rgba(0, 0, 0, 0.7);
             border-radius: 5px;
             box-shadow: 0 0 15px #00ccff;
+            animation: fadeIn 1s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         .game-over, .pause-menu {
             display: none;
@@ -101,6 +116,10 @@
             box-shadow: 0 0 20px #ff0000;
             color: #ffcc00;
             text-shadow: 0 0 10px #ffcc00;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            50% { opacity: 0.8; }
         }
         .game-over button, .pause-menu button {
             margin: 10px;
@@ -110,6 +129,11 @@
             border-radius: 5px;
             color: #fff;
             cursor: pointer;
+            transition: all 0.3s;
+        }
+        .game-over button:hover, .pause-menu button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px #ffcc00;
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">

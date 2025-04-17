@@ -31,6 +31,8 @@ export default class Powerup {
     resize(width, height) {
         this.width = 40 * (width / 1920);
         this.height = 40 * (height / 1440);
+        this.x = Math.max(0, Math.min(this.x, width - this.width));
+        this.y = Math.max(-this.height, Math.min(this.y, height));
     }
 
     saveState() {

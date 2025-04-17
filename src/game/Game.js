@@ -1,6 +1,7 @@
 import Player from './Player.js';
 import Enemy from './Enemy.js';
 import StealthEnemy from './enemies/StealthEnemy.js';
+import BossEnemy from './enemies/BossEnemy.js';
 import Powerup from './Powerup.js';
 import HUD from '../ui/HUD.js';
 import ParticleSystem from './ParticleSystem.js';
@@ -20,6 +21,7 @@ export default class Game {
         this.input = new InputHandler(this);
         this.score = 0;
         this.wave = 1;
+        this.level = 1;
         this.gameOver = false;
         this.paused = false;
         this.bossActive = false;
@@ -27,7 +29,7 @@ export default class Game {
         this.bulletsHit = 0;
         this.scoreMultiplier = 1;
         this.consecutiveHits = 0;
-        this.difficulty = 1.0; // 动态难度
+        this.difficulty = 1.0;
 
         // 超级代码：高级音效系统
         this.audioEngine = {
@@ -35,7 +37,8 @@ export default class Game {
             effects: {
                 explosion: new Audio('assets/sounds/explosion.mp3'),
                 laser: new Audio('assets/sounds/laser.mp3'),
-                powerup: new Audio('assets/sounds/powerup.mp3')
+                powerup: new Audio('assets/sounds/powerup.mp3'),
+                boss: new Audio('assets/sounds/boss.mp3')
             }
         };
         this.audioEngine.bgm.loop = true;
@@ -46,6 +49,8 @@ export default class Game {
         });
 
         this.quality = settings.graphicsQuality;
+        this.gameOver.style = gameOver;
+        this.pauseMenu.style = pauseMenu;
     }
 
     start() {
@@ -79,21 +84,21 @@ export default class Game {
     spawnWave() {
         const enemyCount = 15 + this.wave * 5 * this.difficulty;
         for (let i = 0; i < enemyCount; i++) {
-            const type = ['small', 'medium', 'large', 'stealth', 'boss'][Math.floor(Math.random() * (this.wave > 10 ? 5 : 4))];
+            const type = ['small', 'medium', 'large', 'stealth', 'boss'][Math.floor(Math.random() * (this.wave > 5 ? 5 : 4))];
             if (type === 'stealth') {
                 this.enemies.push(new StealthEnemy(this, this.wave));
             } else if (type === 'boss' && !this.bossActive && this.wave % 5 === 0) {
-                this.enemies.push(new Enemy(this, this.wave, true));
+                this.enemies.push(new BossEnemy(this, this.wave));
                 this.bossActive = true;
-                this.audioEngine.effects.laser.play();
+                if (this.audioEngine.effects.boss) this.audioEngine.effects.boss.play();
             } else {
                 this.enemies.push(new Enemy(this, this.wave, false, type));
             }
         }
-        for (let i = 0; i < Math.floor(this.wave / 3); i++) {
-            if (Math.random() < 0.7) this.powerups.push(new Powerup(this));
+        for (let i = 0; i < Math.floor(this.wave / 2); i++) {
+            if (Math.random() < 0.5) this.powerups.push(new Powerup(this));
         }
-        this.difficulty = Math.min(2.0, this.difficulty + 0.1); // 超级代码：动态难度
+        console.log(`波次 ${this.wave} 生成: ${enemyCount} 敌人, ${this.powerups.length} 道具`);
     }
 
     animate() {
@@ -106,7 +111,7 @@ export default class Game {
             this.player.update(keys);
             this.player.draw();
             this.enemies.forEach(enemy => {
-                enemy.update(this.player);
+                enemy.update(this.player); // 超级代码：AI模拟
                 enemy.draw();
             });
             this.powerups.forEach(powerup => {
@@ -119,14 +124,19 @@ export default class Game {
             this.hud.draw();
 
             if (this.enemies.length === 0) {
+                if (this.bossActive) {
+                    this.level++;
+                    this.bossActive = false;
+                    console.log(`关卡 ${this.level} 完成`);
+                }
                 this.wave++;
-                this.bossActive = false;
+                this.difficulty = Math.min(2.5, this.difficulty + 0.1);
                 this.spawnWave();
             }
 
-            // 超级代码：粒子特效和屏幕抖动
+            // 超级代码：屏幕特效
             if (this.bossActive) {
-                this.ctx.filter = 'hue-rotate(90deg)';
+                this.ctx.filter = 'hue-rotate(90deg) brightness(110%)';
                 this.particles.addBurst(this.canvas.width / 2, this.canvas.height / 2);
             }
 
@@ -172,6 +182,7 @@ export default class Game {
                     if (this.audioEngine.effects.explosion) this.audioEngine.effects.explosion.play();
                     this.consecutiveHits = 0;
                     this.scoreMultiplier = 1;
+                    console.log('玩家被击中, 生命:', this.player.health);
                 }
             });
             if (this.isColliding(this.player, enemy)) {
@@ -179,6 +190,7 @@ export default class Game {
                 enemy.active = false;
                 this.particles.addExplosion(enemy.x, enemy.y);
                 if (this.audioEngine.effects.explosion) this.audioEngine.effects.explosion.play();
+                console.log('玩家与敌人碰撞, 生命:', this.player.health);
             }
         });
 
@@ -192,10 +204,11 @@ export default class Game {
                     if (this.consecutiveHits >= 5) this.scoreMultiplier = Math.min(this.scoreMultiplier + 0.2, 3);
                     this.particles.addExplosion(bullet.x, bullet.y);
                     if (enemy.health <= 0) {
-                        const score = enemy.isBoss ? 200 : enemy.type === 'stealth' ? 100 : { large: 60, medium: 40, small: 20 }[enemy.type] || 20;
+                        const score = enemy.isBoss ? 200 : { stealth: 100, large: 60, medium: 40, small: 20 }[enemy.type] || 20;
                         this.score += Math.round(score * this.scoreMultiplier);
                         enemy.active = false;
                         if (this.audioEngine.effects.explosion) this.audioEngine.effects.explosion.play();
+                        console.log('敌人被击败, 得分:', this.score);
                     }
                 }
             });
@@ -203,12 +216,19 @@ export default class Game {
 
         this.powerups.forEach(powerup => {
             if (this.isColliding(this.player, powerup)) {
+                console.log('玩家拾取道具:', powerup.type);
                 if (powerup.type === 'life') {
                     this.player.health = Math.min(this.player.health + 50, 200);
+                    console.log('生命道具生效, 新生命:', this.player.health);
                 } else if (powerup.type === 'energy') {
                     this.player.health += 30;
+                    console.log('能量道具生效, 新生命:', this.player.health);
+                } else if (powerup.type === 'shield') {
+                    this.player.shield = Math.min(this.player.shield + 50, 100);
+                    console.log('护盾道具生效, 新护盾:', this.player.shield);
                 } else {
                     this.player.weaponSystem.setWeapon(powerup.type);
+                    console.log('武器道具生效:', powerup.type);
                 }
                 powerup.active = false;
                 if (this.audioEngine.effects.powerup) this.audioEngine.effects.powerup.play();
@@ -222,6 +242,7 @@ export default class Game {
         if (this.player.health <= 0) {
             this.gameOver = true;
             this.hud.showGameOver();
+            gameOver.style.display = 'block';
         }
     }
 
@@ -233,6 +254,7 @@ export default class Game {
         return {
             score: this.score,
             wave: this.wave,
+            level: this.level,
             bulletsFired: this.bulletsFired,
             bulletsHit: this.bulletsHit,
             player: this.player.saveState(),
@@ -240,21 +262,24 @@ export default class Game {
             powerups: this.powerups.map(p => p.saveState()),
             scoreMultiplier: this.scoreMultiplier,
             consecutiveHits: this.consecutiveHits,
-            difficulty: this.difficulty
+            difficulty: this.difficulty,
+            bossActive: this.bossActive
         };
     }
 
     loadState(state) {
         this.score = state.score;
         this.wave = state.wave;
+        this.level = state.level;
         this.bulletsFired = state.bulletsFired;
         this.bulletsHit = state.bulletsHit;
         this.scoreMultiplier = state.scoreMultiplier;
         this.consecutiveHits = state.consecutiveHits;
         this.difficulty = state.difficulty || 1.0;
+        this.bossActive = state.bossActive || false;
         this.player.loadState(state.player);
         this.enemies = state.enemies.map(data => {
-            const enemy = data.type === 'stealth' ? new StealthEnemy(this, this.wave) : new Enemy(this, this.wave, data.isBoss, data.type);
+            const enemy = data.type === 'stealth' ? new StealthEnemy(this, this.wave) : data.type === 'boss' ? new BossEnemy(this, this.wave) : new Enemy(this, this.wave, data.isBoss, data.type);
             enemy.loadState(data);
             return enemy;
         });

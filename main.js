@@ -134,8 +134,10 @@ function preloadAssets() {
             'assets/images/background.png', 'assets/images/player_sheet.png',
             'assets/images/enemy_small.png', 'assets/images/enemy_medium.png',
             'assets/images/enemy_large.png', 'assets/images/enemy_stealth.png',
-            'assets/images/bullet.png', 'assets/images/powerup_life.png',
-            'assets/images/powerup_energy.png', 'assets/images/powerup_laser.png'
+            'assets/images/enemy_boss.png', 'assets/images/bullet.png',
+            'assets/images/powerup_life.png', 'assets/images/powerup_energy.png',
+            'assets/images/powerup_laser.png', 'assets/images/powerup_penta.png',
+            'assets/images/powerup_shield.png'
         ];
         const images = {};
         let loaded = 0;
@@ -143,13 +145,17 @@ function preloadAssets() {
             const img = new Image();
             img.src = path;
             img.onload = () => { loaded++; images[path] = img; if (loaded === imagePaths.length) resolve(images); };
-            img.onerror = () => { loaded++; images[path] = null; if (loaded === imagePaths.length) resolve(images); };
+            img.onerror = () => { loaded++; images[path] = null; console.warn(`图片加载失败: ${path}`); if (loaded === imagePaths.length) resolve(images); };
         });
     });
 }
 
 async function startGame() {
     const images = await preloadAssets();
+    if (!images || Object.values(images).every(img => img === null)) {
+        alert(translations[settings.language].game_over + ': 资源加载失败');
+        return;
+    }
     menuContainer.style.display = 'none';
     canvas.style.display = 'block';
     virtualControls.style.display = isMobileDevice() ? 'flex' : 'none';
@@ -157,6 +163,8 @@ async function startGame() {
     game.resize(window.innerWidth, window.innerHeight);
     game.start();
     continueButton.disabled = false;
+    gameOver.style.display = 'none';
+    pauseMenu.style.display = 'none';
 }
 
 function continueGame() {
@@ -221,8 +229,13 @@ function handleOrientation() {
     if (isMobileDevice()) {
         if (window.innerHeight > window.innerWidth) {
             virtualControls.style.flexDirection = 'column';
+            virtualControls.style.bottom = '10px';
+            virtualControls.style.left = '10px';
         } else {
             virtualControls.style.flexDirection = 'row';
+            virtualControls.style.bottom = '10px';
+            virtualControls.style.left = '50%';
+            virtualControls.style.transform = 'translateX(-50%)';
         }
         if (game) game.resize(window.innerWidth, window.innerHeight);
     }
@@ -232,15 +245,15 @@ function setupVirtualControls() {
     const virtualKeys = {};
     ['left', 'up', 'down', 'right', 'shoot'].forEach(id => {
         const button = document.getElementById(`virtual-${id}`);
-        button.addEventListener('touchstart', () => virtualKeys[id] = true);
-        button.addEventListener('touchend', () => virtualKeys[id] = false);
+        button.addEventListener('touchstart', (e) => { e.preventDefault(); virtualKeys[id] = true; });
+        button.addEventListener('touchend', (e) => { e.preventDefault(); virtualKeys[id] = false; });
     });
     game.input.setVirtualKeys(virtualKeys);
 }
 
 function updateHUD() {
     if (game) {
-        hud.innerHTML = `生命: ${game.player.health} | 得分: ${game.score} | 波次: ${game.wave}`;
+        hud.innerHTML = `生命: ${Math.max(0, game.player.health)} | 得分: ${game.score} | 波次: ${game.wave} | 难度: ${game.difficulty.toFixed(1)}x`;
     }
 }
 
