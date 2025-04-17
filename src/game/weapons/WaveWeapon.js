@@ -1,21 +1,23 @@
 export default class WaveWeapon {
-    constructor(game) {
-        this.game = game;
-        this.cooldown = 20;
+    constructor(weaponSystem) {
+        this.weaponSystem = weaponSystem;
+        this.game = weaponSystem.game;
+        this.interval = 300;
+        this.image = 'assets/images/bullet_wave.png';
     }
 
-    shoot(x, y) {
-        this.game.player.weaponSystem.bullets.push({
-            x: x,
-            y: y,
-            width: 10,
-            height: 15,
-            speed: 12,
-            damage: 15,
+    shoot() {
+        const bullet = {
+            x: this.weaponSystem.owner.x + this.weaponSystem.owner.width / 2 - 5,
+            y: this.weaponSystem.owner.y,
+            width: 15,
+            height: 25,
+            speed: -8,
+            damage: 25,
             active: true,
-            imagePath: 'assets/images/bullet_wave.png',
-            color: '#ffcc00'
-        });
-        if (this.game.audioEngine.effects.wave) this.game.audioEngine.effects.wave.play();
+            image: this.image
+        };
+        this.weaponSystem.bullets.push(bullet);
+        this.game.player.audioEngine.play('wave');
     }
 }

@@ -1,25 +1,19 @@
 export default class HUD {
     constructor(game) {
         this.game = game;
-    }
-
-    updateLanguage() {
-        // 语言更新由main.js处理
-    }
-
-    resize(width, height) {
-        // HUD位置调整由main.js处理
+        this.hudElement = document.getElementById('hud');
     }
 
     draw() {
-        // HUD绘制由main.js处理
+        this.hudElement.innerHTML = `生命: ${Math.max(0, this.game.player.health)} | 得分: ${this.game.score} | 波次: ${this.game.wave} | 难度: ${this.game.difficulty.toFixed(1)}x`;
     }
 
     showGameOver() {
-        // 由main.js控制gameOver显示
+        this.hudElement.innerHTML = '';
+        document.getElementById('game-over').style.display = 'block';
     }
 
-    showPauseMenu() {
-        // 由main.js控制pauseMenu显示
+    updateLanguage() {
+        this.draw();
     }
 }

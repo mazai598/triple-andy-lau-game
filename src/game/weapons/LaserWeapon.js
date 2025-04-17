@@ -1,21 +1,23 @@
 export default class LaserWeapon {
-    constructor(game) {
-        this.game = game;
-        this.cooldown = 15;
+    constructor(weaponSystem) {
+        this.weaponSystem = weaponSystem;
+        this.game = weaponSystem.game;
+        this.interval = 150;
+        this.image = 'assets/images/bullet_laser.png';
     }
 
-    shoot(x, y) {
-        this.game.player.weaponSystem.bullets.push({
-            x: x,
-            y: y,
-            width: 4,
-            height: 20,
-            speed: 15,
+    shoot() {
+        const bullet = {
+            x: this.weaponSystem.owner.x + this.weaponSystem.owner.width / 2 - 5,
+            y: this.weaponSystem.owner.y,
+            width: 10,
+            height: 30,
+            speed: -12,
             damage: 20,
             active: true,
-            imagePath: 'assets/images/bullet_laser.png',
-            color: '#00ffcc'
-        });
-        if (this.game.audioEngine.effects.laser) this.game.audioEngine.effects.laser.play();
+            image: this.image
+        };
+        this.weaponSystem.bullets.push(bullet);
+        this.game.player.audioEngine.play('laser');
     }
 }

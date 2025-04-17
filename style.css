@@ -11,8 +11,42 @@
 
 body {
   overflow: hidden;
-  font-family: 'PixelFont', sans-serif;
+  font-family: 'PixelFont', 'Orbitron', sans-serif;
   background: #000;
+  touch-action: manipulation;
+}
+
+#loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  background: #000;
+}
+
+.loading-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+  filter: brightness(0.8);
+}
+
+.loading-text {
+  color: #00ffcc;
+  font-size: 2rem;
+  text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ff99;
+  animation: pulse 2s infinite;
+  z-index: 10;
 }
 
 .background-video {
@@ -32,12 +66,13 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
-  color: #fff;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  color: #00ffcc;
+  text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ff99;
   z-index: 10;
+  animation: pulse 2s infinite;
 }
 
-.game-title {
+h1 {
   font-size: 4rem;
   margin-bottom: 2rem;
   animation: glow 2s ease-in-out infinite;
@@ -49,7 +84,7 @@ body {
   padding: 1rem 2rem;
   font-size: 1.5rem;
   font-family: 'PixelFont', sans-serif;
-  background: linear-gradient(45deg, #ff007a, #00d4ff);
+  background: linear-gradient(45deg, #00ccff, #0066ff);
   border: 2px solid #fff;
   border-radius: 10px;
   color: #fff;
@@ -81,11 +116,11 @@ body {
   display: block;
   margin: 1rem 0;
   font-size: 1.2rem;
-  z-index: 100;
 }
 
 .settings-menu select, .settings-menu input[type="range"] {
-  z-index: 100;
+  width: 100%;
+  padding: 0.5rem;
 }
 
 .settings-menu input[type="text"] {
@@ -95,13 +130,18 @@ body {
   padding: 0.5rem;
   font-family: 'PixelFont', sans-serif;
   cursor: pointer;
-  z-index: 100;
 }
 
 @keyframes glow {
   0% { text-shadow: 0 0 10px #ff007a; }
   50% { text-shadow: 0 0 20px #00d4ff; }
   100% { text-shadow: 0 0 10px #ff007a; }
+}
+
+@keyframes pulse {
+  0% { text-shadow: 0 0 10px #00ffcc; }
+  50% { text-shadow: 0 0 20px #00ff99; }
+  100% { text-shadow: 0 0 10px #00ffcc; }
 }
 
 #game-canvas {
@@ -112,7 +152,7 @@ body {
   height: 100%;
 }
 
-.mobile-controls {
+.virtual-controls {
   position: fixed;
   bottom: 20px;
   left: 20px;
@@ -122,7 +162,7 @@ body {
   z-index: 10;
 }
 
-.mobile-button {
+.virtual-controls button {
   width: 60px;
   height: 60px;
   font-size: 2rem;
@@ -134,23 +174,61 @@ body {
   cursor: pointer;
   touch-action: manipulation;
   opacity: 0.8;
-  z-index: 100;
 }
 
-.mobile-button:active {
+.virtual-controls button:active {
   opacity: 1;
   transform: scale(1.1);
 }
 
-#mobile-shoot {
+#virtual-shoot {
   position: fixed;
   bottom: 100px;
   right: 20px;
 }
 
+.hud {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  color: #00ffcc;
+  font-size: 1.2rem;
+  text-shadow: 0 0 5px #00ffcc;
+  z-index: 10;
+}
+
+.game-over, .pause-menu {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #00ffcc;
+  text-shadow: 0 0 10px #00ffcc;
+  background: rgba(0, 0, 0, 0.9);
+  padding: 2rem;
+  border-radius: 10px;
+  z-index: 100;
+}
+
+.game-over h2, .pause-menu h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.game-over p, .pause-menu p {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.game-over button, .pause-menu button {
+  margin: 0.5rem;
+}
+
 @media (max-width: 768px) {
-  .game-title { font-size: 2.5rem; }
+  h1 { font-size: 2.5rem; }
   .menu-buttons button, .settings-menu button, .install-button { font-size: 1.2rem; padding: 0.8rem 1.5rem; }
   .settings-menu { padding: 1rem; }
-  .mobile-controls { display: flex; }
+  .loading-text { font-size: 1.5rem; }
+  .virtual-controls { display: flex; }
 }

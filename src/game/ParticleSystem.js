@@ -1,36 +1,37 @@
 export default class ParticleSystem {
     constructor(game) {
         this.game = game;
+        this.ctx = game.ctx;
         this.particles = [];
     }
 
     addExplosion(x, y) {
-        for (let i = 0; i < 20; i++) {
-            this.particles.push({ x, y, vx: Math.random() * 6 - 3, vy: Math.random() * 6 - 3, life: 30 });
+        for (let i = 0; i < 10; i++) {
+            this.particles.push({
+                x,
+                y,
+                radius: Math.random() * 5 + 2,
+                speedX: (Math.random() - 0.5) * 5,
+                speedY: (Math.random() - 0.5) * 5,
+                life: 1000,
+                created: Date.now()
+            });
         }
     }
 
-    addBurst(x, y) {
-        for (let i = 0; i < 50; i++) {
-            this.particles.push({ x, y, vx: Math.random() * 10 - 5, vy: Math.random() * 10 - 5, life: 60, color: `#${Math.floor(Math.random()*16777215).toString(16)}` });
-        }
-    }
-
-    update() {
-        this.particles = this.particles.filter(p => {
-            p.x += p.vx;
-            p.y += p.vy;
-            p.life--;
-            return p.life > 0;
+    update(deltaTime = 16.67) {
+        const now = Date.now();
+        this.particles = this.particles.filter(p => now - p.created < p.life);
+        this.particles.forEach(p => {
+            p.x += p.speedX * (deltaTime / 16.67);
+            p.y += p.speedY * (deltaTime / 16.67);
         });
     }
 
     draw() {
+        const image = this.game.assets.images['assets/images/explosion.png'] || new Image();
         this.particles.forEach(p => {
-            this.game.ctx.fillStyle = p.color || '#ffcc00';
-            this.game.ctx.globalAlpha = p.life / 30;
-            this.game.ctx.fillRect(p.x, p.y, 2, 2);
-            this.game.ctx.globalAlpha = 1;
+            this.ctx.drawImage(image, p.x - p.radius, p.y - p.radius, p.radius * 2, p.radius * 2);
         });
     }
 }

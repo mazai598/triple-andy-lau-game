@@ -1,21 +1,23 @@
 export default class NormalWeapon {
-    constructor(game) {
-        this.game = game;
-        this.cooldown = 10;
+    constructor(weaponSystem, type = 'player') {
+        this.weaponSystem = weaponSystem;
+        this.game = weaponSystem.game;
+        this.interval = type === 'player' ? 200 : type === 'boss' ? 300 : 500;
+        this.image = type === 'player' ? 'assets/images/bullet.png' : 'assets/images/enemy_bullet.png';
     }
 
-    shoot(x, y) {
-        this.game.player.weaponSystem.bullets.push({
-            x: x,
-            y: y,
-            width: 2,
-            height: 10,
-            speed: 10,
-            damage: 10,
+    shoot() {
+        const bullet = {
+            x: this.weaponSystem.owner.x + this.weaponSystem.owner.width / 2 - 5,
+            y: this.weaponSystem.owner.y,
+            width: 10,
+            height: 20,
+            speed: self.weaponSystem.owner === this.game.player ? -10 : 5,
+            damage: this.weaponSystem.owner === this.game.player ? 10 : 15,
             active: true,
-            imagePath: 'assets/images/bullet.png',
-            color: '#ff0000'
-        });
-        if (this.game.audioEngine.effects.shoot) this.game.audioEngine.effects.shoot.play();
+            image: this.image
+        };
+        this.weaponSystem.bullets.push(bullet);
+        this.game.player.audioEngine.play('shoot');
     }
 }

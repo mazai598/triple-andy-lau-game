@@ -1,4 +1,5 @@
 import Game from './src/game/Game.js';
+import { translations, updateLanguage } from './src/utils/Translations.js';
 
 const canvas = document.getElementById('game-canvas');
 const menuContainer = document.querySelector('.menu-container');
@@ -24,6 +25,9 @@ const pauseMenu = document.getElementById('pause-menu');
 const restartButton = document.getElementById('restart-game');
 const resumeButton = document.getElementById('resume-game');
 const returnMenuButton = document.getElementById('return-menu');
+const loadingScreen = document.getElementById('loading-screen');
+const loadingProgress = document.getElementById('loading-progress');
+const backgroundVideo = document.querySelector('.background-video');
 
 let game = null;
 let gameState = null;
@@ -40,74 +44,280 @@ let settings = {
     }
 };
 
-const translations = {
-    zh: {
-        title: '极致飞机大战',
-        start: '开始游戏',
-        continue: '继续游戏',
-        settings: '设置',
-        exit: '退出',
-        sound_volume: '音量',
-        graphics_quality: '画质',
-        language: '语言',
-        low: '低',
-        high: '高',
-        chinese: '中文',
-        english: 'English',
-        save: '保存',
-        close: '关闭',
-        move_up: '向上',
-        move_down: '向下',
-        move_left: '向左',
-        move_right: '向右',
-        shoot: '射击',
-        game_over: '游戏结束',
-        restart: '重启',
-        paused: '暂停',
-        resume: '继续',
-        menu: '主菜单',
-        waiting_for_key: '按任意键...'
-    },
-    en: {
-        title: 'Ultimate Air Combat',
-        start: 'Start Game',
-        continue: 'Continue Game',
-        settings: 'Settings',
-        exit: 'Exit',
-        sound_volume: 'Sound Volume',
-        graphics_quality: 'Graphics Quality',
-        language: 'Language',
-        low: 'Low',
-        high: 'High',
-        chinese: 'Chinese',
-        english: 'English',
-        save: 'Save',
-        close: 'Close',
-        move_up: 'Move Up',
-        move_down: 'Move Down',
-        move_left: 'Move Left',
-        move_right: 'Move Right',
-        shoot: 'Shoot',
-        game_over: 'Game Over',
-        restart: 'Restart',
-        paused: 'Paused',
-        resume: 'Resume',
-        menu: 'Main Menu',
-        waiting_for_key: 'Press any key...'
-    }
-};
+async function preloadAssets() {
+    return new Promise((resolve) => {
+        const assets = {
+            images: [
+                'assets/images/background.png',
+                'assets/images/player_sheet.png',
+                'assets/images/enemy_small.png',
+                'assets/images/enemy_medium.png',
+                'assets/images/enemy_large.png',
+                'assets/images/enemy_stealth.png',
+                'assets/images/boss_mini.png',
+                'assets/images/boss_mid.png',
+                'assets/images/boss_final.png',
+                'assets/images/bullet.png',
+                'assets/images/bullet_laser.png',
+                'assets/images/bullet_penta.png',
+                'assets/images/bullet_wave.png',
+                'assets/images/powerup_life.png',
+                'assets/images/powerup_energy.png',
+                'assets/images/powerup_laser.png',
+                'assets/images/powerup_penta.png',
+                'assets/images/powerup_wave.png',
+                'assets/images/loading_bg.png',
+                'assets/images/explosion.png',
+                'assets/images/enemy_bullet.png'
+            ],
+            sounds: [
+                'assets/sounds/bgm.mp3',
+                'assets/sounds/explosion.mp3',
+                'assets/sounds/laser.mp3',
+                'assets/sounds/powerup.mp3',
+                'assets/sounds/boss_warning.mp3',
+                'assets/sounds/missile.mp3',
+                'assets/sounds/penta.mp3',
+                'assets/sounds/shoot.mp3',
+                'assets/sounds/wave.mp3'
+            ],
+            videos: [
+                'assets/videos/menu_starfield.mp4',
+                'assets/videos/menu_starfield.webm'
+            ]
+        };
 
-function updateLanguage() {
-    try {
-        document.querySelectorAll('[data-i18n]').forEach(element => {
-            const key = element.getAttribute('data-i18n');
-            element.textContent = translations[settings.language][key];
+        const loadedAssets = { images: {}, sounds: {}, videos: {} };
+        const total = assets.images.length + assets.sounds.length + assets.videos.length;
+        let loaded = 0;
+
+        const updateProgress = () => {
+            const progress = Math.round((loaded / total) * 100);
+            loadingProgress.textContent = `${progress}%`;
+        };
+
+        const onAssetLoad = (type, path, asset) => {
+            loaded++;
+            loadedAssets[type][path] = asset;
+            console.log(`成功加载${type}: ${path}`);
+            updateProgress();
+            if (loaded === total) resolve(loadedAssets);
+        };
+
+        const onAssetError = (type, path) => {
+            loaded++;
+            loadedAssets[type][path] = null;
+            console.warn(`${type}加载失败: ${path}`);
+            updateProgress();
+            if (loaded === total) resolve(loadedAssets);
+        };
+
+        assets.images.forEach(path => {
+            const img = new Image();
+            img.src = path;
+            img.onload = () => onAssetLoad('images', path, img);
+            img.onerror = () => onAssetError('images', path);
         });
-        updateKeyBindingDisplay();
-        if (game) game.hud.updateLanguage();
-        console.log('语言更新成功');
+
+        assets.sounds.forEach(path => {
+            const audio = new Audio();
+            audio.src = path;
+            audio.oncanplaythrough = () => onAssetLoad('sounds', path, audio);
+            audio.onerror = () => onAssetError('sounds', path);
+        });
+
+        assets.videos.forEach(path => {
+            const video = document.createElement('video');
+            video.src = path;
+            video.oncanplaythrough = () => onAssetLoad('videos', path, video);
+            video.onerror = () => onAssetError('videos', path);
+        });
+
+        if (total === 0) {
+            loadingProgress.textContent = '100%';
+            resolve(loadedAssets);
+        }
+    });
+}
+
+async function initializeGame() {
+    try {
+        console.log('开始加载资源...');
+        const assets = await preloadAssets();
+        if (!assets.images || Object.values(assets.images).every(item => item === null)) {
+            throw new Error('所有图像资源加载失败');
+        }
+        console.log('资源加载完成，初始化游戏...');
+        loadingScreen.style.display = 'none';
+        backgroundVideo.style.display = 'block';
+        menuContainer.style.display = 'block';
+        window.assets = assets;
+        updateLanguage(settings.language);
+        if (isMobileDevice()) setupVirtualControls();
     } catch (error) {
-        console.error('语言更新失败:', error);
+        console.error('游戏初始化失败:', error);
+        loadingScreen.innerHTML = '<div class="loading-text">加载失败，请刷新页面</div>';
+    }
+}
+
+async function startGame() {
+    try {
+        console.log('开始游戏...');
+        menuContainer.style.display = 'none';
+        backgroundVideo.style.display = 'none';
+        canvas.style.display = 'block';
+        virtualControls.style.display = isMobileDevice() ? 'flex' : 'none';
+        game = new Game(canvas, settings, window.assets);
+        game.resize(window.innerWidth, window.innerHeight);
+        game.start();
+        continueButton.disabled = false;
+        gameOver.style.display = 'none';
+        pauseMenu.style.display = 'none';
+        console.log('游戏成功启动');
+    } catch (error) {
+        console.error('启动游戏失败:', error);
+        alert('游戏启动失败，请检查网络连接或刷新页面');
+        returnToMenu();
+    }
+}
+
+function continueGame() {
+    if (gameState) {
+        try {
+            menuContainer.style.display = 'none';
+            backgroundVideo.style.display = 'none';
+            canvas.style.display = 'block';
+            virtualControls.style.display = isMobileDevice() ? 'flex' : 'none';
+            game = new Game(canvas, settings, window.assets);
+            game.loadState(gameState);
+            game.resize(window.innerWidth, window.innerHeight);
+            game.start();
+            console.log('继续游戏成功');
+        } catch (error) {
+            console.error('继续游戏失败:', error);
+            alert('继续游戏失败，请检查网络连接或刷新页面');
+            returnToMenu();
+        }
+    }
+}
+
+function showSettings() {
+    try {
+        menuContainer.querySelector('.menu-buttons').style.display = 'none';
+        settingsMenu.style.display = 'block';
+        soundVolume.value = settings.soundVolume;
+        graphicsQuality.value = settings.graphicsQuality;
+        languageSelect.value = settings.language;
+        updateKeyBindingDisplay();
+        console.log('设置菜单显示成功');
+    } catch (error) {
+        console.error('显示设置菜单失败:', error);
+    }
+}
+
+function saveSettingsHandler(e) {
+    e.preventDefault();
+    try {
+        settings.soundVolume = parseFloat(soundVolume.value);
+        settings.graphicsQuality = graphicsQuality.value;
+        settings.language = languageSelect.value;
+        if (game) game.updateSettings(settings);
+        updateLanguage(settings.language);
+        closeSettingsHandler();
+        console.log('设置保存成功');
+    } catch (error) {
+        console.error('保存设置失败:', error);
+    }
+}
+
+function closeSettingsHandler(e) {
+    if (e) e.preventDefault();
+    try {
+        settingsMenu.style.display = 'none';
+        menuContainer.querySelector('.menu-buttons').style.display = 'block';
+        console.log('设置菜单关闭成功');
+    } catch (error) {
+        console.error('关闭设置菜单失败:', error);
+    }
+}
+
+function returnToMenu() {
+    try {
+        if (game) {
+            gameState = game.saveState();
+            game.stop();
+            game = null;
+        }
+        canvas.style.display = 'none';
+        menuContainer.style.display = 'block';
+        backgroundVideo.style.display = 'block';
+        virtualControls.style.display = 'none';
+        gameOver.style.display = 'none';
+        pauseMenu.style.display = 'none';
+        console.log('返回主菜单成功');
+    } catch (error) {
+        console.error('返回主菜单失败:', error);
+    }
+}
+
+function exitGame() {
+    try {
+        window.close();
+        console.log('游戏退出');
+    } catch (error) {
+        console.error('退出游戏失败:', error);
+    }
+}
+
+function isMobileDevice() {
+    return /Mobi|Android|iPhone|iPad|iPod|Touch/i.test(navigator.userAgent);
+}
+
+function handleOrientation() {
+    try {
+        if (isMobileDevice()) {
+            const isPortrait = window.innerHeight > window.innerWidth;
+            virtualControls.style.flexDirection = isPortrait ? 'column' : 'row';
+            virtualControls.style.bottom = '10px';
+            virtualControls.style.left = isPortrait ? '10px' : '50%';
+            virtualControls.style.transform = isPortrait ? 'none' : 'translateX(-50%)';
+            if (game) game.resize(window.innerWidth, window.innerHeight);
+            console.log('设备方向调整成功');
+        }
+    } catch (error) {
+        console.error('设备方向调整失败:', error);
+    }
+}
+
+function setupVirtualControls() {
+    try {
+        const virtualKeys = {};
+        const debounceDelay = 50;
+        let lastTouchTime = 0;
+
+        ['left', 'up', 'down', 'right', 'shoot'].forEach(id => {
+            const button = document.getElementById(`virtual-${id}`);
+            const handleStart = (e) => {
+                e.preventDefault();
+                const now = Date.now();
+                if (now - lastTouchTime < debounceDelay) return;
+                lastTouchTime = now;
+                virtualKeys[id] = true;
+            };
+            const handleEnd = (e) => {
+                e.preventDefault();
+                virtualKeys[id] = false;
+            };
+
+            button.addEventListener('touchstart', handleStart, { passive: false });
+            button.addEventListener('touchend', handleEnd, { passive: false });
+            button.addEventListener('mousedown', handleStart);
+            button.addEventListener('mouseup', handleEnd);
+        });
+        if (game) game.input.setVirtualKeys(virtualKeys);
+        console.log('虚拟按键设置成功');
+    } catch (error) {
+        console.error('虚拟按键设置失败:', error);
     }
 }
 
@@ -138,205 +348,9 @@ function bindKeyInput(input, action) {
     });
 }
 
-function preloadAssets() {
-    return new Promise((resolve) => {
-        const imagePaths = [
-            'assets/images/background.png',
-            'assets/images/player_sheet.png',
-            'assets/images/enemy_small.png',
-            'assets/images/enemy_medium.png',
-            'assets/images/enemy_large.png',
-            'assets/images/enemy_stealth.png',
-            'assets/images/boss_mini.png',
-            'assets/images/boss_mid.png',
-            'assets/images/boss_final.png',
-            'assets/images/bullet.png',
-            'assets/images/bullet_laser.png',
-            'assets/images/bullet_penta.png',
-            'assets/images/bullet_wave.png',
-            'assets/images/powerup_life.png',
-            'assets/images/powerup_energy.png',
-            'assets/images/powerup_laser.png',
-            'assets/images/powerup_penta.png',
-            'assets/images/powerup_wave.png'
-        ];
-        const images = {};
-        let loaded = 0;
-        imagePaths.forEach(path => {
-            const img = new Image();
-            img.src = path;
-            img.onload = () => {
-                loaded++;
-                images[path] = img;
-                console.log(`成功加载图片: ${path}`);
-                if (loaded === imagePaths.length) resolve(images);
-            };
-            img.onerror = () => {
-                loaded++;
-                images[path] = null;
-                console.warn(`图片加载失败: ${path}`);
-                if (loaded === imagePaths.length) resolve(images);
-            };
-        });
-    });
-}
-
-async function startGame() {
-    try {
-        console.log('开始加载资源...');
-        const images = await preloadAssets();
-        if (!images || Object.values(images).every(img => img === null)) {
-            throw new Error('所有资源加载失败');
-        }
-        console.log('资源加载完成，开始初始化游戏...');
-        menuContainer.style.display = 'none';
-        canvas.style.display = 'block';
-        virtualControls.style.display = isMobileDevice() ? 'flex' : 'none';
-        game = new Game(canvas, settings, images);
-        game.resize(window.innerWidth, window.innerHeight);
-        game.start();
-        continueButton.disabled = false;
-        gameOver.style.display = 'none';
-        pauseMenu.style.display = 'none';
-        console.log('游戏成功启动');
-    } catch (error) {
-        console.error('启动游戏失败:', error);
-        alert('游戏启动失败，请检查控制台日志');
-        returnToMenu();
-    }
-}
-
-function continueGame() {
-    if (gameState) {
-        try {
-            menuContainer.style.display = 'none';
-            canvas.style.display = 'block';
-            virtualControls.style.display = isMobileDevice() ? 'flex' : 'none';
-            game = new Game(canvas, settings);
-            game.loadState(gameState);
-            game.resize(window.innerWidth, window.innerHeight);
-            game.start();
-            console.log('继续游戏成功');
-        } catch (error) {
-            console.error('继续游戏失败:', error);
-            alert('继续游戏失败，请检查控制台日志');
-            returnToMenu();
-        }
-    }
-}
-
-function showSettings() {
-    try {
-        menuContainer.querySelector('.menu-buttons').style.display = 'none';
-        settingsMenu.style.display = 'block';
-        soundVolume.value = settings.soundVolume;
-        graphicsQuality.value = settings.graphicsQuality;
-        languageSelect.value = settings.language;
-        updateKeyBindingDisplay();
-        console.log('设置菜单显示成功');
-    } catch (error) {
-        console.error('显示设置菜单失败:', error);
-    }
-}
-
-function saveSettingsHandler(e) {
-    e.preventDefault();
-    try {
-        settings.soundVolume = parseFloat(soundVolume.value);
-        settings.graphicsQuality = graphicsQuality.value;
-        settings.language = languageSelect.value;
-        if (game) game.updateSettings(settings);
-        updateLanguage();
-        closeSettingsHandler();
-        console.log('设置保存成功');
-    } catch (error) {
-        console.error('保存设置失败:', error);
-    }
-}
-
-function closeSettingsHandler(e) {
-    if (e) e.preventDefault();
-    try {
-        settingsMenu.style.display = 'none';
-        menuContainer.querySelector('.menu-buttons').style.display = 'block';
-        console.log('设置菜单关闭成功');
-    } catch (error) {
-        console.error('关闭设置菜单失败:', error);
-    }
-}
-
-function returnToMenu() {
-    try {
-        if (game) {
-            gameState = game.saveState();
-            game.stop();
-            game = null;
-        }
-        canvas.style.display = 'none';
-        menuContainer.style.display = 'block';
-        virtualControls.style.display = 'none';
-        gameOver.style.display = 'none';
-        pauseMenu.style.display = 'none';
-        console.log('返回主菜单成功');
-    } catch (error) {
-        console.error('返回主菜单失败:', error);
-    }
-}
-
-function exitGame() {
-    try {
-        window.close();
-        console.log('游戏退出');
-    } catch (error) {
-        console.error('退出游戏失败:', error);
-    }
-}
-
-function isMobileDevice() {
-    return /Mobi|Android|iPhone|iPad|iPod|Touch/i.test(navigator.userAgent);
-}
-
-function handleOrientation() {
-    try {
-        if (isMobileDevice()) {
-            if (window.innerHeight > window.innerWidth) {
-                virtualControls.style.flexDirection = 'column';
-                virtualControls.style.bottom = '10px';
-                virtualControls.style.left = '10px';
-            } else {
-                virtualControls.style.flexDirection = 'row';
-                virtualControls.style.bottom = '10px';
-                virtualControls.style.left = '50%';
-                virtualControls.style.transform = 'translateX(-50%)';
-            }
-            if (game) game.resize(window.innerWidth, window.innerHeight);
-            console.log('设备方向调整成功');
-        }
-    } catch (error) {
-        console.error('设备方向调整失败:', error);
-    }
-}
-
-function setupVirtualControls() {
-    try {
-        const virtualKeys = {};
-        ['left', 'up', 'down', 'right', 'shoot'].forEach(id => {
-            const button = document.getElementById(`virtual-${id}`);
-            button.addEventListener('touchstart', (e) => { e.preventDefault(); virtualKeys[id] = true; });
-            button.addEventListener('touchend', (e) => { e.preventDefault(); virtualKeys[id] = false; });
-            button.addEventListener('mousedown', (e) => { e.preventDefault(); virtualKeys[id] = true; });
-            button.addEventListener('mouseup', (e) => { e.preventDefault(); virtualKeys[id] = false; });
-        });
-        if (game) game.input.setVirtualKeys(virtualKeys);
-        console.log('虚拟按键设置成功');
-    } catch (error) {
-        console.error('虚拟按键设置失败:', error);
-    }
-}
-
 function updateHUD() {
     try {
-        if (game) {
+        if (game && !game.paused && !game.gameOver) {
             hud.innerHTML = `生命: ${Math.max(0, game.player.health)} | 得分: ${game.score} | 波次: ${game.wave} | 难度: ${game.difficulty.toFixed(1)}x`;
         }
     } catch (error) {
@@ -351,7 +365,12 @@ saveSettings.addEventListener('click', saveSettingsHandler);
 closeSettings.addEventListener('click', closeSettingsHandler);
 exitButton.addEventListener('click', exitGame);
 restartButton.addEventListener('click', startGame);
-resumeButton.addEventListener('click', () => { game.togglePause(); pauseMenu.style.display = 'none'; });
+resumeButton.addEventListener('click', () => {
+    if (game) {
+        game.togglePause();
+        pauseMenu.style.display = 'none';
+    }
+});
 returnMenuButton.addEventListener('click', returnToMenu);
 
 bindKeyInput(keyUp, 'up');
@@ -366,7 +385,27 @@ window.addEventListener('resize', () => {
 });
 window.addEventListener('orientationchange', handleOrientation);
 
-updateLanguage();
-if (isMobileDevice()) setupVirtualControls();
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const installButton = document.getElementById('install');
+    installButton.style.display = 'block';
+    installButton.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`用户选择: ${outcome}`);
+            deferredPrompt = null;
+            installButton.style.display = 'none';
+        }
+    });
+});
 
+window.addEventListener('appinstalled', () => {
+    console.log('PWA 已安装');
+    document.getElementById('install').style.display = 'none';
+});
+
+initializeGame();
 setInterval(updateHUD, 100);

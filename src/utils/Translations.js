@@ -1,6 +1,6 @@
 export const translations = {
     zh: {
-        title: '极致飞机大战',
+        title: '我爱打飞机',
         start: '开始游戏',
         continue: '继续游戏',
         settings: '设置',
@@ -20,14 +20,15 @@ export const translations = {
         move_right: '向右',
         shoot: '射击',
         game_over: '游戏结束',
-        restart: '重启',
+        restart: '按 R 重新开始',
         paused: '暂停',
-        resume: '继续',
+        resume: '按 P 继续',
         menu: '主菜单',
-        waiting_for_key: '按任意键...'
+        waiting_for_key: '按任意键...',
+        install: '安装游戏'
     },
     en: {
-        title: 'Ultimate Air Combat',
+        title: 'I Love Air Combat',
         start: 'Start Game',
         continue: 'Continue Game',
         settings: 'Settings',
@@ -47,10 +48,24 @@ export const translations = {
         move_right: 'Move Right',
         shoot: 'Shoot',
         game_over: 'Game Over',
-        restart: 'Restart',
+        restart: 'Press R to Restart',
         paused: 'Paused',
-        resume: 'Resume',
+        resume: 'Press P to Resume',
         menu: 'Main Menu',
-        waiting_for_key: 'Press any key...'
+        waiting_for_key: 'Press any key...',
+        install: 'Install Game'
     }
 };
+
+export function updateLanguage(lang) {
+    try {
+        document.querySelectorAll('[data-i18n]').forEach(element => {
+            const key = element.getAttribute('data-i18n');
+            const translation = translations[lang][key] || translations.en[key] || key;
+            element.textContent = translation;
+        });
+        console.log('语言更新成功:', lang);
+    } catch (error) {
+        console.error('语言更新失败:', error);
+    }
+}
