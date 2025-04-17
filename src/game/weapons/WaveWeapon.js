@@ -7,17 +7,28 @@ export default class WaveWeapon {
     }
 
     shoot() {
-        const bullet = {
-            x: this.weaponSystem.owner.x + this.weaponSystem.owner.width / 2 - 5,
-            y: this.weaponSystem.owner.y,
-            width: 15,
-            height: 25,
-            speed: -8,
-            damage: 25,
-            active: true,
-            image: this.image
-        };
-        this.weaponSystem.bullets.push(bullet);
+        if (!this.weaponSystem.owner) {
+            console.warn('WaveWeapon: owner 未定义，跳过射击');
+            return;
+        }
+        const centerX = this.weaponSystem.owner.x + this.weaponSystem.owner.width / 2;
+        const y = this.weaponSystem.owner.y;
+        // 发射三道波形射线
+        const offsets = [-15, 0, 15];
+        offsets.forEach(offset => {
+            const bullet = {
+                x: centerX + offset - 10,
+                y: y,
+                width: 20,
+                height: 20,
+                speed: -6,
+                damage: 25,
+                active: true,
+                image: this.image,
+                offset: 0 // 用于正弦波动
+            };
+            this.weaponSystem.bullets.push(bullet);
+        });
         this.game.player.audioEngine.play('wave');
     }
 }

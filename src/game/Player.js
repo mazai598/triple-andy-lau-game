@@ -1,4 +1,6 @@
 import WeaponSystem from './weapons/WeaponSystem.js';
+import AudioEngine from '../utils/AudioEngine.js';
+import LaserShot from './weapons/LaserShot.js';
 
 export default class Player {
     constructor(game) {
@@ -11,54 +13,54 @@ export default class Player {
         this.y = this.canvas.height - this.height - 20;
         this.speed = 5;
         this.health = 100;
+        this.maxHealth = 100;
+        this.laserCharges = 0; // 激光发射次数
         this.weaponSystem = new WeaponSystem(this);
+        this.audioEngine = new AudioEngine(game.assets);
+        this.audioEngine.setVolume(game.settings.soundVolume);
+        // 3帧动画
+        this.frame = 0; // 0: 静止, 1: 左倾, 2: 右倾
+        this.frameWidth = 64;
+        this.frameHeight = 64;
         this.image = game.assets.images['assets/images/player_sheet.png'] || new Image();
-        this.audioEngine = {
-            play: (key, loop = false) => {
-                const sound = game.assets.sounds[`assets/sounds/${key}.mp3`];
-                if (sound) {
-                    sound.currentTime = 0;
-                    sound.loop = loop;
-                    sound.volume = game.settings.soundVolume;
-                    sound.play().catch(e => console.warn(`${key}音效播放失败:`, e));
-                }
-            },
-            pause: (key) => {
-                const sound = game.assets.sounds[`assets/sounds/${key}.mp3`];
-                if (sound) sound.pause();
-            },
-            resume: (key) => {
-                const sound = game.assets.sounds[`assets/sounds/${key}.mp3`];
-                if (sound && sound.paused) sound.play().catch(e => console.warn(`${key}音效恢复失败:`, e));
-            },
-            stopAll: () => {
-                Object.values(game.assets.sounds).forEach(sound => {
-                    if (sound) {
-                        sound.pause();
-                        sound.currentTime = 0;
-                    }
-                });
-            },
-            setVolume: (volume) => {
-                Object.values(game.assets.sounds).forEach(sound => {
-                    if (sound) sound.volume = volume;
-                });
-            }
-        };
     }
 
     update(keys, deltaTime = 16.67) {
-        const speed = this.speed * (deltaTime / 16.67);
-        if (keys.left && this.x > 0) this.x -= speed;
-        if (keys.right && this.x < this.canvas.width - this.width) this.x += speed;
-        if (keys.up && this.y > 0) this.y -= speed;
-        if (keys.down && this.y < this.canvas.height - this.height) this.y += speed;
+        let moveX = 0;
+        if (keys.left) moveX -= this.speed;
+        if (keys.right) moveX += this.speed;
+        if (keys.up) this.y -= this.speed;
+        if (keys.down) this.y += this.speed;
         if (keys.shoot) this.weaponSystem.shoot();
+        if (keys.laser && this.laserCharges > 0) {
+            const laserShot = new LaserShot(this.weaponSystem);
+            laserShot.shoot();
+            this.laserCharges--;
+            console.log('玩家触发激光, 剩余次数:', this.laserCharges);
+        }
+
+        this.frame = moveX < 0 ? 1 : moveX > 0 ? 2 : 0;
+
+        this.x += moveX * (deltaTime / 16.67);
+        this.x = Math.max(0, Math.min(this.x, this.canvas.width - this.width));
+        this.y = Math.max(0, Math.min(this.y, this.canvas.height - this.height));
+
         this.weaponSystem.update(deltaTime);
     }
 
     draw() {
-        this.ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+        if (!this.image || this.image.width === 0) {
+            this.ctx.fillStyle = 'blue';
+            this.ctx.fillRect(this.x, this.y, this.width, this.height);
+        } else {
+            this.ctx.drawImage(
+                this.image,
+                this.frame * this.frameWidth, 0,
+                this.frameWidth, this.frameHeight,
+                this.x, this.y,
+                this.width, this.height
+            );
+        }
         this.weaponSystem.draw();
     }
 
@@ -72,6 +74,7 @@ export default class Player {
             x: this.x,
             y: this.y,
             health: this.health,
+            laserCharges: this.laserCharges,
             weapon: this.weaponSystem.currentWeapon
         };
     }
@@ -80,6 +83,7 @@ export default class Player {
         this.x = state.x;
         this.y = state.y;
         this.health = state.health;
+        this.laserCharges = state.laserCharges;
         this.weaponSystem.setWeapon(state.weapon);
     }
 }

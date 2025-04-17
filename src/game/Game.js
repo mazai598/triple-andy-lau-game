@@ -68,17 +68,30 @@ export default class Game {
 
             for (let i = 0; i < enemyCount; i++) {
                 const type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
+                let enemy;
                 if (type === 'boss') {
-                    this.enemies.push(new BossEnemy(this, this.wave));
+                    enemy = new BossEnemy(this, this.wave);
                 } else if (type === 'stealth') {
-                    this.enemies.push(new StealthEnemy(this, this.wave));
+                    enemy = new StealthEnemy(this, this.wave);
                 } else {
-                    this.enemies.push(new Enemy(this, this.wave, type));
+                    enemy = new Enemy(this, this.wave, type);
                 }
+                if (!enemy.weaponSystem.owner) {
+                    console.warn(`敌人 ${type} 的 weaponSystem.owner 未设置`);
+                    enemy.weaponSystem.owner = enemy;
+                }
+                this.enemies.push(enemy);
             }
-            for (let i = 0; i < Math.floor(this.wave / 3); i++) {
-                if (Math.random() < 0.3) this.powerups.push(new Powerup(this));
-            }
+
+            // 每波生成所有类型的道具
+            const powerupTypes = ['life', 'energy', 'laser', 'wave', 'penta'];
+            powerupTypes.forEach((type, index) => {
+                if (Math.random() < 0.8) {
+                    const powerup = new Powerup(this, type);
+                    powerup.x = (this.canvas.width / (powerupTypes.length + 1)) * (index + 1) - powerup.width / 2;
+                    this.powerups.push(powerup);
+                }
+            });
             console.log(`波次 ${this.wave} 生成: ${enemyCount} 敌人, ${this.powerups.length} 道具`);
         } catch (error) {
             console.error('生成波次失败:', error);
@@ -89,10 +102,11 @@ export default class Game {
 
     isColliding(obj1, obj2) {
         if (!obj1 || !obj2) return false;
-        return obj1.x < obj2.x + obj2.width &&
-               obj1.x + obj1.width > obj2.x &&
-               obj1.y < obj2.y + obj2.height &&
-               obj1.y + obj1.height > obj2.y;
+        const padding = obj2.type ? 10 : 0;
+        return obj1.x < obj2.x + obj2.width + padding &&
+               obj1.x + obj1.width > obj2.x - padding &&
+               obj1.y < obj2.y + obj2.height + padding &&
+               obj1.y + obj1.height > obj2.y - padding;
     }
 
     handleCollisions() {
@@ -142,10 +156,11 @@ export default class Game {
             this.powerups.forEach(powerup => {
                 if (!validateObject(powerup) || !validateObject(this.player)) return;
                 if (this.isColliding(this.player, powerup)) {
-                    console.log('玩家拾取道具:', powerup.type);
+                    console.log(`玩家拾取道具: ${powerup.type} at (${powerup.x.toFixed(2)}, ${powerup.y.toFixed(2)})`);
                     powerup.applyEffect(this.player);
                     powerup.active = false;
                     this.player.audioEngine.play('powerup');
+                    this.particles.addExplosion(powerup.x, powerup.y);
                 }
             });
 

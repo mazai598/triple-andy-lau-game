@@ -18,6 +18,7 @@ const keyDown = document.getElementById('key-down');
 const keyLeft = document.getElementById('key-left');
 const keyRight = document.getElementById('key-right');
 const keyShoot = document.getElementById('key-shoot');
+const keyLaser = document.getElementById('key-laser');
 const virtualControls = document.querySelector('.virtual-controls');
 const hud = document.getElementById('hud');
 const gameOver = document.getElementById('game-over');
@@ -40,7 +41,8 @@ let settings = {
         down: ['KeyS', 'ArrowDown'],
         left: ['KeyA', 'ArrowLeft'],
         right: ['KeyD', 'ArrowRight'],
-        shoot: ['Space']
+        shoot: ['Space'],
+        laser: ['KeyL']
     }
 };
 
@@ -68,7 +70,10 @@ async function preloadAssets() {
                 'assets/images/powerup_wave.png',
                 'assets/images/loading_bg.png',
                 'assets/images/explosion.png',
-                'assets/images/enemy_bullet.png'
+                'assets/images/enemy_bullet.png',
+                'assets/images/laser.png',
+                'assets/images/muzzle_flash.png',
+                'assets/images/particle_trail.png'
             ],
             sounds: [
                 'assets/sounds/bgm.mp3',
@@ -99,7 +104,7 @@ async function preloadAssets() {
         const onAssetLoad = (type, path, asset) => {
             loaded++;
             loadedAssets[type][path] = asset;
-            console.log(`成功加载${type}: ${path}`);
+            console.log(`成功加载 ${type}: ${path}`);
             updateProgress();
             if (loaded === total) resolve(loadedAssets);
         };
@@ -107,7 +112,7 @@ async function preloadAssets() {
         const onAssetError = (type, path) => {
             loaded++;
             loadedAssets[type][path] = null;
-            console.warn(`${type}加载失败: ${path}`);
+            console.warn(`加载失败 ${type}: ${path}`);
             updateProgress();
             if (loaded === total) resolve(loadedAssets);
         };
@@ -295,7 +300,7 @@ function setupVirtualControls() {
         const debounceDelay = 50;
         let lastTouchTime = 0;
 
-        ['left', 'up', 'down', 'right', 'shoot'].forEach(id => {
+        ['left', 'up', 'down', 'right', 'shoot', 'laser'].forEach(id => {
             const button = document.getElementById(`virtual-${id}`);
             const handleStart = (e) => {
                 e.preventDefault();
@@ -328,6 +333,7 @@ function updateKeyBindingDisplay() {
         keyLeft.value = settings.keyBindings.left.join('/');
         keyRight.value = settings.keyBindings.right.join('/');
         keyShoot.value = settings.keyBindings.shoot.join('/');
+        keyLaser.value = settings.keyBindings.laser.join('/');
         console.log('按键绑定显示更新成功');
     } catch (error) {
         console.error('按键绑定显示更新失败:', error);
@@ -351,7 +357,7 @@ function bindKeyInput(input, action) {
 function updateHUD() {
     try {
         if (game && !game.paused && !game.gameOver) {
-            hud.innerHTML = `生命: ${Math.max(0, game.player.health)} | 得分: ${game.score} | 波次: ${game.wave} | 难度: ${game.difficulty.toFixed(1)}x`;
+            hud.innerHTML = `生命: ${Math.max(0, game.player.health)} | 得分: ${game.score} | 波次: ${game.wave} | 难度: ${game.difficulty.toFixed(1)}x | 武器: ${game.player.weaponSystem.currentWeapon} | 激光: ${game.player.laserCharges}`;
         }
     } catch (error) {
         console.error('HUD 更新失败:', error);
@@ -378,6 +384,7 @@ bindKeyInput(keyDown, 'down');
 bindKeyInput(keyLeft, 'left');
 bindKeyInput(keyRight, 'right');
 bindKeyInput(keyShoot, 'shoot');
+bindKeyInput(keyLaser, 'laser');
 
 window.addEventListener('resize', () => {
     handleOrientation();
