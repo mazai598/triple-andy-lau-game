@@ -20,8 +20,16 @@ export default class WeaponSystem {
     }
 
     shoot() {
+        if (!this.owner) {
+            console.warn('WeaponSystem: owner 未定义，跳过射击');
+            return;
+        }
         const now = Date.now();
         const weapon = this.weapons[this.currentWeapon];
+        if (!weapon) {
+            console.warn(`WeaponSystem: 武器 ${this.currentWeapon} 不存在`);
+            return;
+        }
         if (now - this.lastShot < weapon.interval) return;
         this.lastShot = now;
         weapon.shoot();

@@ -183,14 +183,27 @@ export default class Game {
             const keys = this.input.getKeys();
             this.player.update(keys, deltaTime);
             this.player.draw();
-            this.enemies.forEach(enemy => {
-                enemy.update(this.player, deltaTime);
-                enemy.draw();
+
+            this.enemies.forEach((enemy, index) => {
+                try {
+                    if (!enemy || !enemy.active) return;
+                    enemy.update(this.player, deltaTime);
+                    enemy.draw();
+                } catch (error) {
+                    console.error(`敌人 ${index} 更新失败:`, error);
+                }
             });
-            this.powerups.forEach(powerup => {
-                powerup.update(deltaTime);
-                powerup.draw();
+
+            this.powerups.forEach((powerup, index) => {
+                try {
+                    if (!powerup || !powerup.active) return;
+                    powerup.update(deltaTime);
+                    powerup.draw();
+                } catch (error) {
+                    console.error(`道具 ${index} 更新失败:`, error);
+                }
             });
+
             this.particles.update(deltaTime);
             this.particles.draw();
             this.handleCollisions();
@@ -207,6 +220,7 @@ export default class Game {
             console.error('动画循环失败:', error);
             this.gameOver = true;
             this.hud.showGameOver();
+            this.gameOverElement.style.display = 'block';
         }
     }
 

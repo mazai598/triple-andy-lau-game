@@ -7,12 +7,16 @@ export default class NormalWeapon {
     }
 
     shoot() {
+        if (!this.weaponSystem.owner) {
+            console.warn('NormalWeapon: owner 未定义，跳过射击');
+            return;
+        }
         const bullet = {
             x: this.weaponSystem.owner.x + this.weaponSystem.owner.width / 2 - 5,
             y: this.weaponSystem.owner.y,
             width: 10,
             height: 20,
-            speed: self.weaponSystem.owner === this.game.player ? -10 : 5,
+            speed: this.weaponSystem.owner === this.game.player ? -10 : 5,
             damage: this.weaponSystem.owner === this.game.player ? 10 : 15,
             active: true,
             image: this.image
