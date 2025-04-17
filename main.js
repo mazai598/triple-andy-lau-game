@@ -99,6 +99,7 @@ async function preloadAssets() {
         const updateProgress = () => {
             const progress = Math.round((loaded / total) * 100);
             loadingProgress.textContent = `${progress}%`;
+            console.log(`加载进度: ${progress}% (${loaded}/${total})`);
         };
 
         const onAssetLoad = (type, path, asset) => {
@@ -106,7 +107,10 @@ async function preloadAssets() {
             loadedAssets[type][path] = asset;
             console.log(`成功加载 ${type}: ${path}`);
             updateProgress();
-            if (loaded === total) resolve(loadedAssets);
+            if (loaded === total) {
+                console.log('所有资源加载完成');
+                resolve(loadedAssets);
+            }
         };
 
         const onAssetError = (type, path) => {
@@ -114,9 +118,13 @@ async function preloadAssets() {
             loadedAssets[type][path] = null;
             console.warn(`加载失败 ${type}: ${path}`);
             updateProgress();
-            if (loaded === total) resolve(loadedAssets);
+            if (loaded === total) {
+                console.log('所有资源加载完成（包含失败项）');
+                resolve(loadedAssets);
+            }
         };
 
+        console.log('开始加载图像资源...');
         assets.images.forEach(path => {
             const img = new Image();
             img.src = path;
@@ -124,6 +132,7 @@ async function preloadAssets() {
             img.onerror = () => onAssetError('images', path);
         });
 
+        console.log('开始加载音频资源...');
         assets.sounds.forEach(path => {
             const audio = new Audio();
             audio.src = path;
@@ -131,6 +140,7 @@ async function preloadAssets() {
             audio.onerror = () => onAssetError('sounds', path);
         });
 
+        console.log('开始加载视频资源...');
         assets.videos.forEach(path => {
             const video = document.createElement('video');
             video.src = path;
@@ -139,6 +149,7 @@ async function preloadAssets() {
         });
 
         if (total === 0) {
+            console.log('无资源需要加载');
             loadingProgress.textContent = '100%';
             resolve(loadedAssets);
         }
@@ -150,7 +161,9 @@ async function initializeGame() {
         console.log('开始加载资源...');
         const assets = await preloadAssets();
         if (!assets.images || Object.values(assets.images).every(item => item === null)) {
-            throw new Error('所有图像资源加载失败');
+            console.error('所有图像资源加载失败');
+            loadingScreen.innerHTML = '<div class="loading-text">加载失败，请刷新页面</div>';
+            return;
         }
         console.log('资源加载完成，初始化游戏...');
         loadingScreen.style.display = 'none';
