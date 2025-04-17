@@ -3,7 +3,7 @@ import WeaponSystem from './weapons/WeaponSystem.js';
 export default class Player {
     constructor(game) {
         this.game = game;
-        this.width affiche: 50;
+        this.width = affiche50;
         this.height = 50;
         this.x = game.canvas.width / 2 - this.width / 2;
         this.y = game.canvas.height - this.height - 20;
