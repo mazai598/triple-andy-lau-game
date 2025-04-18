@@ -45,7 +45,7 @@ let settings = {
     soundVolume: 0.5,
     soundEnabled: 'on',
     graphicsQuality: 'high',
-    language: 'zh',
+    language: localStorage.getItem('language') || 'zh',
     keyBindings: {
         up: ['KeyW', 'ArrowUp'],
         down: ['KeyS', 'ArrowDown'],
@@ -203,7 +203,7 @@ async function initializeGame() {
         updateLanguage(settings.language);
         if (isMobileDevice()) setupVirtualControls();
         audioEngine = new AudioEngine(assets);
-        audioEngine.setVolume(settings.soundVolume);
+        audioEngine.setVolume(settings.soundEnabled === 'on' ? settings.soundVolume : 0);
         if (settings.soundEnabled === 'on') audioEngine.play('bgm', true);
         handleResize();
     } catch (error) {
@@ -311,6 +311,7 @@ function saveSettingsHandler(e) {
         settings.soundEnabled = soundToggle.value;
         settings.graphicsQuality = graphicsQuality.value;
         settings.language = languageSelect.value;
+        localStorage.setItem('language', settings.language);
         if (game) game.updateSettings(settings);
         updateLanguage(settings.language);
         if (audioEngine) {
@@ -485,7 +486,12 @@ function bindKeyInput(input, action) {
 function updateHUD() {
     try {
         if (game && !game.paused && !game.gameOver) {
-            hud.innerHTML = `生命: ${Math.max(0, game.player.health)} | 得分: ${game.score} | 波次: ${game.wave} | 难度: ${game.difficulty.toFixed(1)}x | 武器: ${game.player.weaponSystem.currentWeapon} | 激光: ${game.player.laserCharges}`;
+            hud.innerHTML = translations[settings.language].health + `: ${Math.max(0, game.player.health)} | ` +
+                            translations[settings.language].score + `: ${game.score} | ` +
+                            translations[settings.language].wave + `: ${game.wave} | ` +
+                            translations[settings.language].difficulty + `: ${game.difficulty.toFixed(1)}x | ` +
+                            translations[settings.language].weapon + `: ${game.player.weaponSystem.currentWeapon} | ` +
+                            translations[settings.language].laser + `: ${game.player.laserCharges}`;
             hud.style.opacity = '1';
         } else {
             hud.style.opacity = '0';

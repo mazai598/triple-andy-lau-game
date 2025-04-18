@@ -100,4 +100,11 @@ export function updateLanguage(lang) {
             option.textContent = translations[lang][keys[index]];
         });
     }
+    const languageSelect = document.getElementById('language');
+    if (languageSelect) {
+        languageSelect.querySelectorAll('option').forEach((option, index) => {
+            const keys = ['zh', 'en'];
+            option.textContent = translations[lang][keys[index]] || option.textContent;
+        });
+    }
 }

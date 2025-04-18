@@ -97,26 +97,29 @@ body {
   font-size: clamp(16px, 2vw, 20px);
   color: #fff;
   background: linear-gradient(45deg, #00f, #0ff);
-  border: none;
+  border: 2px solid #0ff;
   border-radius: 25px;
   cursor: pointer;
-  transition: transform 0.2s, background 0.3s;
-  box-shadow: 0 0 10px #00f;
+  transition: transform 0.2s, background 0.3s, box-shadow 0.3s;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
 }
 
 .menu-buttons button:hover, .settings-menu button:hover, .modal-content button:hover, .game-over-buttons button:hover, .pause-menu-buttons button:hover {
   transform: scale(1.1);
   background: linear-gradient(45deg, #0ff, #00f);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 1);
 }
 
 .menu-buttons button:active, .settings-menu button:active, .modal-content button:active, .game-over-buttons button:active, .pause-menu-buttons button:active {
   transform: scale(0.95);
+  box-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
 }
 
 /* 设置菜单 */
 .settings-menu {
   background: rgba(0, 0, 0, 0.8);
   padding: 20px;
+  border: 2px solid #00f;
   border-radius: 15px;
   box-shadow: 0 0 20px #00f;
   color: #fff;
@@ -140,9 +143,15 @@ body {
   padding: 8px;
   font-size: clamp(12px, 1.5vw, 16px);
   border-radius: 5px;
-  border: none;
+  border: 1px solid #0ff;
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
+  box-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
+  transition: box-shadow 0.3s;
+}
+
+.settings-item input:hover, .settings-item select:hover {
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
 }
 
 /* 模态窗口 */
@@ -162,6 +171,7 @@ body {
 .modal-content {
   background: rgba(0, 0, 0, 0.8);
   padding: 20px;
+  border: 2px solid #00f;
   border-radius: 15px;
   box-shadow: 0 0 20px #00f;
   color: #fff;
@@ -190,6 +200,7 @@ body {
   font-size: clamp(12px, 1.5vw, 18px);
   background: rgba(0, 0, 0, 0.5);
   padding: 10px;
+  border: 1px solid #0ff;
   border-radius: 10px;
   transition: opacity 0.3s;
 }
@@ -202,6 +213,7 @@ body {
   transform: translate(-50%, -50%);
   background: rgba(0, 0, 0, 0.8);
   padding: 20px;
+  border: 2px solid #f00;
   border-radius: 15px;
   box-shadow: 0 0 20px #f00;
   color: #fff;
@@ -250,21 +262,23 @@ body {
   width: clamp(40px, 10vw, 60px);
   height: clamp(40px, 10vw, 60px);
   border-radius: 50%;
-  border: none;
+  border: 2px solid #0ff;
   background: linear-gradient(45deg, #00f, #0ff);
   color: #fff;
   font-size: clamp(16px, 3vw, 24px);
-  box-shadow: 0 0 10px #00f;
-  transition: transform 0.1s, background 0.2s;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+  transition: transform 0.1s, background 0.2s, box-shadow 0.3s;
 }
 
 .virtual-controls button:hover {
   background: linear-gradient(45deg, #0ff, #00f);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 1);
 }
 
 .virtual-controls button:active {
   transform: scale(0.9);
   background: linear-gradient(45deg, #f00, #ff0);
+  box-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
 }
 
 /* 加载界面 */

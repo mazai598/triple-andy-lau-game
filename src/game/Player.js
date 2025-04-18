@@ -7,7 +7,7 @@ export default class Player {
         this.game = game;
         this.canvas = game.canvas;
         this.ctx = game.ctx;
-        this.width = 64;
+        this.width = 64; // 显示尺寸（缩放后）
         this.height = 64;
         this.x = this.canvas.width / 2 - this.width / 2;
         this.y = this.canvas.height - this.height - 20;
@@ -18,13 +18,15 @@ export default class Player {
         this.weaponSystem = new WeaponSystem(this);
         this.audioEngine = new AudioEngine(game.assets);
         this.audioEngine.setVolume(game.settings.soundVolume);
-        // 3帧动画
+        // 三帧动画 (384x128, 每帧 128x128)
         this.frame = 0; // 0: 静止, 1: 左倾, 2: 右倾
-        this.frameWidth = 64;
-        this.frameHeight = 64;
+        this.frameWidth = 128; // 原始帧宽
+        this.frameHeight = 128; // 原始帧高
         this.image = game.assets.images['assets/images/player_sheet.png'] || new Image();
         if (!this.image || this.image.width === 0) {
             console.warn('玩家战机图片 player_sheet.png 未加载');
+        } else {
+            console.log('玩家战机图片加载成功，尺寸:', this.image.width, 'x', this.image.height);
         }
         // 尾焰粒子
         this.trailTimer = 0;
