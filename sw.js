@@ -11,6 +11,7 @@ const urlsToCache = [
     '/assets/videos/menu_starfield.webm',
     '/assets/sounds/bgm.mp3',
     '/assets/sounds/boss_warning.mp3',
+    '/assets/sounds/click.mp3',
     '/assets/sounds/explosion.mp3',
     '/assets/sounds/laser.mp3',
     '/assets/sounds/missile.mp3',
