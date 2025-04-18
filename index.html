@@ -8,10 +8,10 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Triple Andy Lau Game</title>
-    <link rel="stylesheet" href="/triple-andy-lau-game/style.css">
-    <link rel="manifest" href="/triple-andy-lau-game/manifest.json">
-    <link rel="icon" href="/triple-andy-lau-game/favicon.ico">
-    <link rel="apple-touch-icon" href="/triple-andy-lau-game/assets/images/icon-192.png">
+    <link rel="stylesheet" href="./style.css">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" href="./favicon.ico">
+    <link rel="apple-touch-icon" href="./assets/images/icon-192.png">
 </head>
 <body>
     <div id="loading-screen">
@@ -20,8 +20,8 @@
     </div>
     <div class="star-particles"></div>
     <video class="background-video" autoplay loop muted playsinline style="display: none;">
-        <source src="/triple-andy-lau-game/assets/videos/menu_starfield.webm" type="video/webm">
-        <source src="/triple-andy-lau-game/assets/videos/menu_starfield.mp4" type="video/mp4">
+        <source src="./assets/videos/menu_starfield.webm" type="video/webm">
+        <source src="./assets/videos/menu_starfield.mp4" type="video/mp4">
     </video>
     <div class="menu-container" style="display: none;">
         <div class="menu-buttons">
@@ -65,7 +65,7 @@
             </div>
             <div class="settings-item">
                 <label for="key-up" id="key-up-label">上移</label>
-                <input type="text" id="key-up" readonly>
+                <-global_settings>input type="text" id="key-up" readonly>
             </div>
             <div class="settings-item">
                 <label for="key-down" id="key-down-label">下移</label>
@@ -140,6 +140,6 @@
             <button id="virtual-laser">激光</button>
         </div>
     </div>
-    <script type="module" src="/triple-andy-lau-game/main.js"></script>
+    <script type="module" src="./main.js"></script>
 </body>
 </html>
