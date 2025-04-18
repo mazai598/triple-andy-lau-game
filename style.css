@@ -72,13 +72,16 @@ body {
   transform: translate(-50%, -50%);
   text-align: center;
   z-index: 1;
+  width: 90%;
+  max-width: 400px;
 }
 
 .menu-buttons h1 {
   color: #fff;
-  font-size: 48px;
+  font-size: clamp(32px, 5vw, 48px);
   text-shadow: 0 0 10px #00f, 0 0 20px #00f;
   animation: glow 2s infinite;
+  margin-bottom: 20px;
 }
 
 @keyframes glow {
@@ -87,11 +90,11 @@ body {
   100% { text-shadow: 0 0 10px #00f, 0 0 20px #00f; }
 }
 
-.menu-buttons button, .settings-menu button, .modal-content button {
+.menu-buttons button, .settings-menu button, .modal-content button, .game-over-buttons button, .pause-menu-buttons button {
   display: block;
-  margin: 15px auto;
+  margin: 10px auto;
   padding: 12px 30px;
-  font-size: 20px;
+  font-size: clamp(16px, 2vw, 20px);
   color: #fff;
   background: linear-gradient(45deg, #00f, #0ff);
   border: none;
@@ -101,12 +104,12 @@ body {
   box-shadow: 0 0 10px #00f;
 }
 
-.menu-buttons button:hover, .settings-menu button:hover, .modal-content button:hover {
+.menu-buttons button:hover, .settings-menu button:hover, .modal-content button:hover, .game-over-buttons button:hover, .pause-menu-buttons button:hover {
   transform: scale(1.1);
   background: linear-gradient(45deg, #0ff, #00f);
 }
 
-.menu-buttons button:active, .settings-menu button:active, .modal-content button:active {
+.menu-buttons button:active, .settings-menu button:active, .modal-content button:active, .game-over-buttons button:active, .pause-menu-buttons button:active {
   transform: scale(0.95);
 }
 
@@ -117,6 +120,9 @@ body {
   border-radius: 15px;
   box-shadow: 0 0 20px #00f;
   color: #fff;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 .settings-item {
@@ -125,14 +131,14 @@ body {
 
 .settings-item label {
   display: block;
-  font-size: 18px;
+  font-size: clamp(14px, 2vw, 18px);
   margin-bottom: 5px;
 }
 
 .settings-item input, .settings-item select {
   width: 100%;
   padding: 8px;
-  font-size: 16px;
+  font-size: clamp(12px, 1.5vw, 16px);
   border-radius: 5px;
   border: none;
   background: rgba(255, 255, 255, 0.1);
@@ -166,12 +172,12 @@ body {
 }
 
 .modal-content h2 {
-  font-size: 28px;
+  font-size: clamp(20px, 3vw, 28px);
   margin-bottom: 15px;
 }
 
 .modal-content p {
-  font-size: 18px;
+  font-size: clamp(14px, 2vw, 18px);
   white-space: pre-wrap;
 }
 
@@ -181,7 +187,7 @@ body {
   top: 10px;
   left: 10px;
   color: #fff;
-  font-size: 18px;
+  font-size: clamp(12px, 1.5vw, 18px);
   background: rgba(0, 0, 0, 0.5);
   padding: 10px;
   border-radius: 10px;
@@ -200,32 +206,54 @@ body {
   box-shadow: 0 0 20px #f00;
   color: #fff;
   text-align: center;
+  width: 90%;
+  max-width: 400px;
 }
 
 #game-over h2, #pause-menu h2 {
-  font-size: 36px;
+  font-size: clamp(24px, 4vw, 36px);
   margin-bottom: 20px;
+}
+
+.game-over-buttons, .pause-menu-buttons {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+#pause-menu.active {
+  display: block;
+}
+
+#pause-menu.active ~ #game-canvas {
+  filter: blur(5px);
 }
 
 /* 虚拟按键 */
 .virtual-controls {
   position: fixed;
   bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
   display: flex;
-  gap: 10px;
+  justify-content: space-between;
+  padding: 0 20px;
   z-index: 1;
 }
 
+.virtual-controls-left, .virtual-controls-right {
+  display: flex;
+  gap: 10px;
+}
+
 .virtual-controls button {
-  width: 60px;
-  height: 60px;
+  width: clamp(40px, 10vw, 60px);
+  height: clamp(40px, 10vw, 60px);
   border-radius: 50%;
   border: none;
   background: linear-gradient(45deg, #00f, #0ff);
   color: #fff;
-  font-size: 24px;
+  font-size: clamp(16px, 3vw, 24px);
   box-shadow: 0 0 10px #00f;
   transition: transform 0.1s, background 0.2s;
 }
@@ -256,11 +284,11 @@ body {
 }
 
 .loading-text {
-  font-size: 36px;
+  font-size: clamp(24px, 4vw, 36px);
   text-shadow: 0 0 10px #00f;
 }
 
 #loading-progress {
   margin-top: 20px;
-  font-size: 24px;
+  font-size: clamp(16px, 2vw, 24px);
 }

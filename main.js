@@ -1,5 +1,6 @@
 import Game from './src/game/Game.js';
 import { translations, updateLanguage } from './src/utils/Translations.js';
+import AudioEngine from './src/utils/AudioEngine.js';
 
 const canvas = document.getElementById('game-canvas');
 const menuContainer = document.querySelector('.menu-container');
@@ -12,6 +13,7 @@ const aboutButton = document.getElementById('about');
 const settingsButton = document.getElementById('settings');
 const exitButton = document.getElementById('exit');
 const soundVolume = document.getElementById('sound-volume');
+const soundToggle = document.getElementById('sound-toggle');
 const graphicsQuality = document.getElementById('graphics-quality');
 const languageSelect = document.getElementById('language');
 const saveSettings = document.getElementById('save-settings');
@@ -38,8 +40,10 @@ const aboutModal = document.getElementById('about-modal');
 
 let game = null;
 let gameState = null;
+let audioEngine = null;
 let settings = {
     soundVolume: 0.5,
+    soundEnabled: 'on',
     graphicsQuality: 'high',
     language: 'zh',
     keyBindings: {
@@ -198,10 +202,10 @@ async function initializeGame() {
         createStarParticles();
         updateLanguage(settings.language);
         if (isMobileDevice()) setupVirtualControls();
-        // 播放背景音乐
-        const audioEngine = new AudioEngine(assets);
+        audioEngine = new AudioEngine(assets);
         audioEngine.setVolume(settings.soundVolume);
-        audioEngine.play('bgm', true);
+        if (settings.soundEnabled === 'on') audioEngine.play('bgm', true);
+        handleResize();
     } catch (error) {
         console.error('游戏初始化失败:', error);
         loadingScreen.innerHTML = '<div class="loading-text">加载失败，请刷新页面</div>';
@@ -221,7 +225,9 @@ async function startGame() {
         continueButton.disabled = false;
         gameOver.style.display = 'none';
         pauseMenu.style.display = 'none';
+        pauseMenu.classList.remove('active');
         console.log('游戏成功启动');
+        if (settings.soundEnabled === 'on') audioEngine.play('click');
     } catch (error) {
         console.error('启动游戏失败:', error);
         alert('游戏启动失败，请检查网络连接或刷新页面');
@@ -240,7 +246,11 @@ function continueGame() {
             game.loadState(gameState);
             game.resize(window.innerWidth, window.innerHeight);
             game.start();
+            gameOver.style.display = 'none';
+            pauseMenu.style.display = 'none';
+            pauseMenu.classList.remove('active');
             console.log('继续游戏成功');
+            if (settings.soundEnabled === 'on') audioEngine.play('click');
         } catch (error) {
             console.error('继续游戏失败:', error);
             alert('继续游戏失败，请检查网络连接或刷新页面');
@@ -250,30 +260,32 @@ function continueGame() {
 }
 
 function showLeaderboard() {
+    const scores = JSON.parse(localStorage.getItem('scores')) || [];
+    if (scores.length === 0) {
+        document.getElementById('leaderboard-text').textContent = translations[settings.language].leaderboard_text;
+    } else {
+        document.getElementById('leaderboard-text').textContent = `排行榜\n${scores.map((s, i) => `${i + 1}. ${s.name} - ${s.score}分`).join('\n')}`;
+    }
     leaderboardModal.style.display = 'flex';
     updateLanguage(settings.language);
-    const audioEngine = new AudioEngine(window.assets);
-    audioEngine.play('click');
+    if (settings.soundEnabled === 'on') audioEngine.play('click');
 }
 
 function showHelp() {
     helpModal.style.display = 'flex';
     updateLanguage(settings.language);
-    const audioEngine = new AudioEngine(window.assets);
-    audioEngine.play('click');
+    if (settings.soundEnabled === 'on') audioEngine.play('click');
 }
 
 function showAbout() {
     aboutModal.style.display = 'flex';
     updateLanguage(settings.language);
-    const audioEngine = new AudioEngine(window.assets);
-    audioEngine.play('click');
+    if (settings.soundEnabled === 'on') audioEngine.play('click');
 }
 
 function closeModal(modal) {
     modal.style.display = 'none';
-    const audioEngine = new AudioEngine(window.assets);
-    audioEngine.play('click');
+    if (settings.soundEnabled === 'on') audioEngine.play('click');
 }
 
 function showSettings() {
@@ -281,12 +293,12 @@ function showSettings() {
         menuContainer.querySelector('.menu-buttons').style.display = 'none';
         settingsMenu.style.display = 'block';
         soundVolume.value = settings.soundVolume;
+        soundToggle.value = settings.soundEnabled;
         graphicsQuality.value = settings.graphicsQuality;
         languageSelect.value = settings.language;
         updateKeyBindingDisplay();
         console.log('设置菜单显示成功');
-        const audioEngine = new AudioEngine(window.assets);
-        audioEngine.play('click');
+        if (settings.soundEnabled === 'on') audioEngine.play('click');
     } catch (error) {
         console.error('显示设置菜单失败:', error);
     }
@@ -296,14 +308,19 @@ function saveSettingsHandler(e) {
     e.preventDefault();
     try {
         settings.soundVolume = parseFloat(soundVolume.value);
+        settings.soundEnabled = soundToggle.value;
         settings.graphicsQuality = graphicsQuality.value;
         settings.language = languageSelect.value;
         if (game) game.updateSettings(settings);
         updateLanguage(settings.language);
+        if (audioEngine) {
+            audioEngine.setVolume(settings.soundEnabled === 'on' ? settings.soundVolume : 0);
+            if (settings.soundEnabled === 'on') audioEngine.play('bgm', true);
+            else audioEngine.stopAll();
+        }
         closeSettingsHandler();
         console.log('设置保存成功');
-        const audioEngine = new AudioEngine(window.assets);
-        audioEngine.play('click');
+        if (settings.soundEnabled === 'on') audioEngine.play('click');
     } catch (error) {
         console.error('保存设置失败:', error);
     }
@@ -315,8 +332,7 @@ function closeSettingsHandler(e) {
         settingsMenu.style.display = 'none';
         menuContainer.querySelector('.menu-buttons').style.display = 'block';
         console.log('设置菜单关闭成功');
-        const audioEngine = new AudioEngine(window.assets);
-        audioEngine.play('click');
+        if (settings.soundEnabled === 'on') audioEngine.play('click');
     } catch (error) {
         console.error('关闭设置菜单失败:', error);
     }
@@ -335,9 +351,9 @@ function returnToMenu() {
         virtualControls.style.display = 'none';
         gameOver.style.display = 'none';
         pauseMenu.style.display = 'none';
+        pauseMenu.classList.remove('active');
         console.log('返回主菜单成功');
-        const audioEngine = new AudioEngine(window.assets);
-        audioEngine.play('click');
+        if (settings.soundEnabled === 'on') audioEngine.play('click');
     } catch (error) {
         console.error('返回主菜单失败:', error);
     }
@@ -347,8 +363,7 @@ function exitGame() {
     try {
         window.close();
         console.log('游戏退出');
-        const audioEngine = new AudioEngine(window.assets);
-        audioEngine.play('click');
+        if (settings.soundEnabled === 'on') audioEngine.play('click');
     } catch (error) {
         console.error('退出游戏失败:', error);
     }
@@ -358,15 +373,48 @@ function isMobileDevice() {
     return /Mobi|Android|iPhone|iPad|iPod|Touch/i.test(navigator.userAgent);
 }
 
+function handleResize() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const aspectRatio = 16 / 9;
+    let canvasWidth, canvasHeight;
+
+    if (width / height > aspectRatio) {
+        canvasHeight = height;
+        canvasWidth = height * aspectRatio;
+    } else {
+        canvasWidth = width;
+        canvasHeight = width / aspectRatio;
+    }
+
+    canvas.style.width = `${canvasWidth}px`;
+    canvas.style.height = `${canvasHeight}px`;
+    canvas.style.left = `${(width - canvasWidth) / 2}px`;
+    canvas.style.top = `${(height - canvasHeight) / 2}px`;
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+
+    if (game) game.resize(canvasWidth, canvasHeight);
+    handleOrientation();
+}
+
 function handleOrientation() {
     try {
         if (isMobileDevice()) {
             const isPortrait = window.innerHeight > window.innerWidth;
-            virtualControls.style.flexDirection = isPortrait ? 'column' : 'row';
-            virtualControls.style.bottom = '20px';
-            virtualControls.style.left = isPortrait ? '20px' : '50%';
-            virtualControls.style.transform = isPortrait ? 'none' : 'translateX(-50%)';
-            if (game) game.resize(window.innerWidth, window.innerHeight);
+            const leftControls = document.querySelector('.virtual-controls-left');
+            const rightControls = document.querySelector('.virtual-controls-right');
+            if (isPortrait) {
+                leftControls.style.flexDirection = 'column';
+                rightControls.style.flexDirection = 'column';
+                virtualControls.style.flexDirection = 'column';
+                virtualControls.style.alignItems = 'center';
+            } else {
+                leftControls.style.flexDirection = 'row';
+                rightControls.style.flexDirection = 'row';
+                virtualControls.style.flexDirection = 'row';
+                virtualControls.style.alignItems = 'flex-end';
+            }
             console.log('设备方向调整成功');
         }
     } catch (error) {
@@ -461,8 +509,8 @@ resumeButton.addEventListener('click', () => {
     if (game) {
         game.togglePause();
         pauseMenu.style.display = 'none';
-        const audioEngine = new AudioEngine(window.assets);
-        audioEngine.play('click');
+        pauseMenu.classList.remove('active');
+        if (settings.soundEnabled === 'on') audioEngine.play('click');
     }
 });
 returnMenuButton.addEventListener('click', returnToMenu);
@@ -480,11 +528,23 @@ bindKeyInput(keyRight, 'right');
 bindKeyInput(keyShoot, 'shoot');
 bindKeyInput(keyLaser, 'laser');
 
-window.addEventListener('resize', () => {
-    handleOrientation();
-    if (game) game.resize(window.innerWidth, window.innerHeight);
+// 暂停游戏快捷键（P 键）
+window.addEventListener('keydown', (e) => {
+    if (e.code === 'KeyP' && game && !game.gameOver) {
+        game.togglePause();
+        if (game.paused) {
+            pauseMenu.style.display = 'block';
+            pauseMenu.classList.add('active');
+        } else {
+            pauseMenu.style.display = 'none';
+            pauseMenu.classList.remove('active');
+        }
+        if (settings.soundEnabled === 'on') audioEngine.play('click');
+    }
 });
-window.addEventListener('orientationchange', handleOrientation);
+
+window.addEventListener('resize', handleResize);
+window.addEventListener('orientationchange', handleResize);
 
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {

@@ -42,6 +42,13 @@
                 <input type="range" id="sound-volume" min="0" max="1" step="0.1" value="0.5">
             </div>
             <div class="settings-item">
+                <label for="sound-toggle" id="sound-toggle-label">音效</label>
+                <select id="sound-toggle">
+                    <option value="on">开启</option>
+                    <option value="off">关闭</option>
+                </select>
+            </div>
+            <div class="settings-item">
                 <label for="graphics-quality" id="graphics-quality-label">画质</label>
                 <select id="graphics-quality">
                     <option value="low">低</option>
@@ -109,22 +116,31 @@
     <div id="hud"></div>
     <div id="game-over" style="display: none;">
         <h2 id="game-over-text">游戏结束</h2>
-        <button id="restart-game">重新开始</button>
-        <button id="return-menu">返回菜单</button>
+        <div class="game-over-buttons">
+            <button id="restart-game">重新开始</button>
+            <button id="return-menu">返回菜单</button>
+        </div>
     </div>
     <div id="pause-menu" style="display: none;">
         <h2 id="pause-text">暂停</h2>
-        <button id="resume-game">继续</button>
-        <button id="return-menu">返回菜单</button>
+        <div class="pause-menu-buttons">
+            <button id="resume-game">继续</button>
+            <button id="return-menu">返回菜单</button>
+        </div>
     </div>
     <div class="virtual-controls" style="display: none;">
-        <button id="virtual-left">←</button>
-        <button id="virtual-right">→</button>
-        <button id="virtual-up">↑</button>
-        <button id="virtual-down">↓</button>
-        <button id="virtual-shoot">射击</button>
-        <button id="virtual-laser">激光</button>
+        <div class="virtual-controls-left">
+            <button id="virtual-left">←</button>
+            <button id="virtual-right">→</button>
+            <button id="virtual-up">↑</button>
+            <button id="virtual-down">↓</button>
+        </div>
+        <div class="virtual-controls-right">
+            <button id="virtual-shoot">射击</button>
+            <button id="virtual-laser">激光</button>
+        </div>
     </div>
     <script type="module" src="main.js"></script>
+</body>
 </body>
 </html>

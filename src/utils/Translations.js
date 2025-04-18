@@ -9,6 +9,7 @@ export const translations = {
         install: '安装游戏',
         settings_title: '设置',
         sound_volume: '音量',
+        sound_toggle: '音效',
         graphics_quality: '画质',
         language: '语言',
         key_up: '上移',
@@ -28,12 +29,14 @@ export const translations = {
         low: '低',
         medium: '中',
         high: '高',
+        on: '开启',
+        off: '关闭',
         leaderboard: '排行榜',
         help: '帮助',
         about: '关于',
-        help_text: '操作说明：\nW/↑：上移\nS/↓：下移\nA/←：左移\nD/→：右移\nSpace：射击\nL：激光',
+        help_text: '操作说明：\nW/↑：上移\nS/↓：下移\nA/←：左移\nD/→：右移\nSpace：射击\nL：激光\nP：暂停',
         about_text: 'Triple Andy Lau 游戏\n版本：1.0.0\n开发者：xAI Team\n感谢你的游玩！',
-        leaderboard_text: '排行榜\n1. 玩家1 - 1000分\n2. 玩家2 - 800分\n3. 玩家3 - 500分'
+        leaderboard_text: '排行榜\n暂无数据'
     },
     en: {
         loading: 'Loading...',
@@ -45,6 +48,7 @@ export const translations = {
         install: 'Install Game',
         settings_title: 'Settings',
         sound_volume: 'Sound Volume',
+        sound_toggle: 'Sound',
         graphics_quality: 'Graphics Quality',
         language: 'Language',
         key_up: 'Move Up',
@@ -64,12 +68,14 @@ export const translations = {
         low: 'Low',
         medium: 'Medium',
         high: 'High',
+        on: 'On',
+        off: 'Off',
         leaderboard: 'Leaderboard',
         help: 'Help',
         about: 'About',
-        help_text: 'Controls:\nW/↑: Move Up\nS/↓: Move Down\nA/←: Move Left\nD/→: Move Right\nSpace: Shoot\nL: Laser',
+        help_text: 'Controls:\nW/↑: Move Up\nS/↓: Move Down\nA/←: Move Left\nD/→: Move Right\nSpace: Shoot\nL: Laser\nP: Pause',
         about_text: 'Triple Andy Lau Game\nVersion: 1.0.0\nDeveloper: xAI Team\nThanks for playing!',
-        leaderboard_text: 'Leaderboard\n1. Player 1 - 1000\n2. Player 2 - 800\n3. Player 3 - 500'
+        leaderboard_text: 'Leaderboard\nNo data'
     }
 };
 
@@ -84,6 +90,13 @@ export function updateLanguage(lang) {
     if (graphicsQuality) {
         graphicsQuality.querySelectorAll('option').forEach((option, index) => {
             const keys = ['low', 'medium', 'high'];
+            option.textContent = translations[lang][keys[index]];
+        });
+    }
+    const soundToggle = document.getElementById('sound-toggle');
+    if (soundToggle) {
+        soundToggle.querySelectorAll('option').forEach((option, index) => {
+            const keys = ['on', 'off'];
             option.textContent = translations[lang][keys[index]];
         });
     }
